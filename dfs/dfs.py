@@ -1,7 +1,6 @@
 import argparse
-import collections
 from lxml import etree
-
+import pickle
 
 class DfsTree:
     def __init__(self, fs_file):
@@ -76,14 +75,49 @@ class DfsTree:
         folder.getparent().remove(folder)
 
 
+class BlockManager:
+    def __init__(self, bm_file, num_node):
+        self.bm_file = bm_file
+        self.num_node  = num_node
+        self.index_map = pickle.load(open(self.bm_file, 'rb'))
+
+    def save(self):
+        pickle.dump(self.index_map, open(self.bm_file, 'wb'))
+
+ #   def put_blocks():
+
+
+
+#n > 0
+# def split(input, n):
+#     rows = input.split('\n') #TODO rewrite for big file
+#     chunk_size = int(len(rows)/n) #TODO check python version and remove int()
+#     if chunk_size != 0:
+#         for i in xrange(0, n-1, chunk_size):
+#             yield rows[i:i+chunk_size]
+#         yield rows[chunk_size*(n-1):len(rows)] #TODO make more uniformly
+#     else:
+#         for i in xrange(0, n, 1):   
+#             yield rows[i:i+1] #slice should not be replaced by index
+
+#def main():
+num_nodes = 3;
+
 parser = argparse.ArgumentParser(description='Dfs command line interface.')
-parser.add_argument('-ls', nargs=1, help='list of directory', metavar='path', dest='ls_path')
-parser.add_argument('-mkdir', nargs=1, help='make new directory', metavar='path', dest='mkdir_path')
-parser.add_argument('-rm', nargs=1, help='remove file or folder', metavar='path', dest='rm_path')
+
+parser.add_argument('-ls', nargs=1, help='list of directory',
+    metavar='path', dest='ls_path')
+parser.add_argument('-mkdir', nargs=1, help='make new directory',
+    metavar='path', dest='mkdir_path')
+parser.add_argument('-rm', nargs=1, help='remove file or folder',
+    metavar='path', dest='rm_path')
+parser.add_argument('-put', nargs=2, help='put local file to dfs',
+    metavar=('local_path', 'dfs_path'), dest='put_paths')
 
 args = parser.parse_args()
 
 dfs_tree = DfsTree('fs_structure.xml')
+#block_manager = BlockManager('bm.pickle', num_nodes)
 #dfs_tree.put('/', 'test_file', [1,2,3])
 
 if args.ls_path:
@@ -95,4 +129,18 @@ if args.mkdir_path:
 if args.rm_path:
     dfs_tree.rm(args.rm_path[0])    
 
+if args.put_paths:
+    with open(args.put_paths[0], 'r') as input:
+        chunks = split(input_file.read(), 3)
+
+
+
+
+
 dfs_tree.save()
+
+
+#if __name__ == "__main__":
+#    main()
+
+
