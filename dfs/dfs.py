@@ -94,6 +94,10 @@ class BlockManager:
             "url": "tcp://localhost:5556",
             "socket": None,
         },
+        {
+            "url": "tcp://172.25.54.77:5556",
+            "socket": None,
+        },
     ]
 
     def __init__(self, bm_file, num_node):
