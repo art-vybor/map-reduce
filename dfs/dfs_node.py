@@ -4,7 +4,7 @@ import sys
 import os
 import pickle
 
-storage_path = "/home/avybornov/dfs_storage"
+storage_path = "/home/art-vybor/dfs_storage"
 
 if not os.path.exists(storage_path):
     os.makedirs(storage_path)

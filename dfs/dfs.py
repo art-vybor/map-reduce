@@ -94,10 +94,10 @@ class BlockManager:
             "url": "tcp://localhost:5556",
             "socket": None,
         },
-        {
-            "url": "tcp://172.25.54.77:5556",
-            "socket": None,
-        },
+        #{
+        ##    "url": "tcp://172.25.54.77:5556",
+        #    "socket": None,
+        #},
     ]
 
     def __init__(self, bm_file, num_node):
@@ -203,7 +203,7 @@ if args.mkdir_path:
     dfs_tree.mkdir(args.mkdir_path[0])
 
 if args.rm_path:
-    dfs_tree.rm(args.rm_path[0])    
+    dfs_tree.rm(args.rm_path[0])  #TODO rewrite  
 
 if args.put_paths:
     with open(args.put_paths[0], 'r') as input:
@@ -217,7 +217,10 @@ if args.put_paths:
 
 if args.get_path:
     indexes = dfs_tree.get_file_indexes(args.get_path[0])
-    print '\n'.join(block_manager.read_blocks(indexes))
+    if indexes is not None:
+        print '\n'.join(block_manager.read_blocks(indexes))
+    else:
+        print 'Incorrect path to file'
 
 
 

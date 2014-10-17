@@ -2,6 +2,6 @@
   <user>
     <avybornov/>
     <vdontsov/>
+    <test index_list="[3, 4]"/>
   </user>
-  <test_file index_list="[1, 2]"/>
 </root>
