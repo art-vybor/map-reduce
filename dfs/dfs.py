@@ -4,10 +4,11 @@ import pickle
 import os
 import zmq
 import ast
+import json
 
 class DfsTree:
-    def __init__(self, fs_file):
-        self.fs_file = fs_file
+    def __init__(self, config):
+        self.fs_file = config['fs_structure file']
 
         parser = etree.XMLParser(remove_blank_text=True)
         self.tree = etree.parse(self.fs_file, parser)
@@ -89,20 +90,9 @@ class DfsTree:
 
 
 class BlockManager:
-    dfs_nodes = [
-        {
-            "url": "tcp://localhost:5556",
-            "socket": None,
-        },
-        #{
-        ##    "url": "tcp://172.25.54.77:5556",
-        #    "socket": None,
-        #},
-    ]
-
-    def __init__(self, bm_file, num_node):
-        self.bm_file = bm_file
-        self.num_node  = num_node
+    def __init__(self, config):
+        self.bm_file = config['block_manager file']
+        self.dfs_nodes = config['nodes']
 
         self.index_map = pickle.load(open(self.bm_file, 'rb')) if os.path.exists(self.bm_file) else {}
 
@@ -133,6 +123,18 @@ class BlockManager:
         dfs_node['socket'].send(pickle.dumps(request))
         return dfs_node['socket'].recv() == 'ok'
 
+    def remove(self, index):
+        request = {'remove': index}
+        dfs_node = self.dfs_nodes[self.index_map[index]]
+        dfs_node['socket'].send(pickle.dumps(request))
+        return dfs_node['socket'].recv() == 'ok'
+
+    def remove_blocks(self, indexes):
+        for index in indexes:
+            if not self.remove(index):
+                raise Exception("Block with index {INDEX} based of server {SERVER} can not be removed".
+                    format(INDEX=index, SERVER=self.dfs_nodes[self.index_map[index]]['url']))
+
     def put_blocks(self, blocks):
         dfs_node_index = 0;
         indexes = []
@@ -159,9 +161,6 @@ class BlockManager:
 
         return blocks
 
-
-
-
 #n > 0
 def split(input, n):
     rows = input.split('\n') #TODO rewrite for big file
@@ -174,62 +173,72 @@ def split(input, n):
         for i in xrange(0, n, 1):   
             yield rows[i:i+1] #slice should not be replaced by index
 
-#def main():
-num_nodes = 2
 
-parser = argparse.ArgumentParser(description='Dfs command line interface.')
+def parse_args():
+    parser = argparse.ArgumentParser(description='Dfs command line interface.')
 
-parser.add_argument('-ls', nargs=1, help='list of directory',
-    metavar='path', dest='ls_path')
-parser.add_argument('-mkdir', nargs=1, help='make new directory',
-    metavar='path', dest='mkdir_path')
-parser.add_argument('-rm', nargs=1, help='remove file or folder',
-    metavar='path', dest='rm_path')
-parser.add_argument('-put', nargs=2, help='put local file to dfs',
-    metavar=('local_path', 'dfs_path'), dest='put_paths')
-parser.add_argument('-get', nargs=1, help='print file',
-    metavar='path', dest='get_path')
+    parser.add_argument('-ls', help='list of directory',
+        metavar='path', dest='ls_path')
+    parser.add_argument('-mkdir', help='make new directory',
+        metavar='path', dest='mkdir_path')
+    parser.add_argument('-rm', help='remove file or folder',
+        metavar='path', dest='rm_path')
+    parser.add_argument('-put', nargs=2, help='put local file to dfs',
+        metavar=('local_path', 'dfs_path'), dest='put_paths')
+    parser.add_argument('-get', help='print file',
+        metavar='path', dest='get_path')
 
-args = parser.parse_args()
+    return parser.parse_args()
 
-dfs_tree = DfsTree('fs_structure.xml')
-block_manager = BlockManager('bm.pickle', num_nodes)
-#dfs_tree.put('/', 'test_file', [1,2,3])
+def parse_config(config_path='config.json'):
+    with open(config_path) as config_file:
+        config_json = json.load(config_file)
+        return config_json
 
-if args.ls_path:
-    print '\n'.join(dfs_tree.ls(args.ls_path[0]))
+def main():
+    args = parse_args()
+    config = parse_config()
 
-if args.mkdir_path:
-    dfs_tree.mkdir(args.mkdir_path[0])
+    dfs_tree = DfsTree(config)
+    block_manager = BlockManager(config)
 
-if args.rm_path:
-    dfs_tree.rm(args.rm_path[0])  #TODO rewrite  
+    if args.ls_path:
+        print '\n'.join(dfs_tree.ls(args.ls_path))
 
-if args.put_paths:
-    with open(args.put_paths[0], 'r') as input:
-        chunks = split(input.read(), num_nodes)
-        indexes = block_manager.put_blocks(chunks)
-        path = args.put_paths[1]
-        if path.endswith('/'):
-            raise Exception("Can't write file to folder")
-        path, name = path.rsplit('/', 1)
-        dfs_tree.put(path, name, indexes)
+    if args.mkdir_path:
+        dfs_tree.mkdir(args.mkdir_path)
 
-if args.get_path:
-    indexes = dfs_tree.get_file_indexes(args.get_path[0])
-    if indexes is not None:
-        print '\n'.join(block_manager.read_blocks(indexes))
-    else:
-        print 'Incorrect path to file'
+    if args.rm_path: #TODO make it recursive
+        if not dfs_tree.is_folder(dfs_tree.get_folder(args.rm_path)):
+            indexes = dfs_tree.get_file_indexes(args.rm_path)
+            block_manager.remove_blocks(indexes)
+        
+        dfs_tree.rm(args.rm_path)
+
+    if args.put_paths:
+        with open(args.put_paths[0], 'r') as input:            
+            path = args.put_paths[1]
+            if path.endswith('/'):
+                raise Exception("Can't write file to folder")
+            path, name = path.rsplit('/', 1)    
+
+            chunks = split(input.read(), len(config['nodes']))
+            indexes = block_manager.put_blocks(chunks)            
+            dfs_tree.put(path, name, indexes)
+
+    if args.get_path:
+        indexes = dfs_tree.get_file_indexes(args.get_path)
+        if indexes is not None:
+            print '\n'.join(block_manager.read_blocks(indexes))
+        else:
+            print 'Incorrect path to file'
 
 
+    block_manager.save()
+    dfs_tree.save()
 
 
-block_manager.save()
-dfs_tree.save()
-
-
-#if __name__ == "__main__":
-#    main()
+if __name__ == "__main__":
+    main()
 
 

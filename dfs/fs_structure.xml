@@ -1,7 +1,6 @@
 <root>
   <user>
-    <avybornov/>
     <vdontsov/>
-    <test index_list="[3, 4]"/>
+    <avybornov folder="True"/>
   </user>
 </root>

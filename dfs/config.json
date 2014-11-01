@@ -1,0 +1,7 @@
+{
+    "nodes": [
+        {"url":"tcp://localhost:5556"}
+    ],
+    "block_manager file": "bm.pickle",
+    "fs_structure file": "fs_structure.xml"
+}
