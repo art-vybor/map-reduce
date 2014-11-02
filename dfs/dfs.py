@@ -73,8 +73,7 @@ class DfsTree:
 
     def put(self, folder, name, index_list):
         if folder.find(name) is not None:
-            raise Exception('File {PATH}/{NAME} already exists'.
-                format(PATH=path.rstrip('/'), NAME=name))
+            raise Exception('File already exists')
 
         folder.append(etree.Element(name, index_list=str(index_list)))
 
@@ -140,10 +139,10 @@ class BlockManager:
 
         for block in blocks:
             index = self.get_index()
-            indexes.append(index)
 
-            if self.write(index, '\n'.join(block), self.dfs_nodes[dfs_node_index]):
+            if self.write(index, block, self.dfs_nodes[dfs_node_index]):
                 self.index_map[index] = dfs_node_index            
+                indexes.append(index)
             else:
                 raise Exception("Can't write block to {SERVER}".
                     format(SERVER=self.dfs_nodes[dfs_node_index]['url']))
@@ -157,21 +156,26 @@ class BlockManager:
     def read_blocks(self, indexes):
         blocks = []
         for index in indexes:
-            blocks.append(self.read(index))            
-        return blocks
+            yield self.read(index)
 
-#n > 0
-def split(input, n):
-    rows = input.split('\n') #TODO rewrite for big file
-    chunk_size = int(len(rows)/n) #TODO check python version and remove int()
-    if chunk_size != 0:
-        for i in xrange(0, n-1, chunk_size):
-            yield rows[i:i+chunk_size]
-        yield rows[chunk_size*(n-1):len(rows)] #TODO make more uniformly
-    else:
-        for i in xrange(0, n, 1):   
-            yield rows[i:i+1] #slice should not be replaced by index
 
+def split(input_path, block_size_limit_mb=64):
+    block_size_limit = block_size_limit_mb * 1024 * 1024
+
+    with file(input_path) as input:
+        block = []
+        block_size = 0
+        for row in input:        
+            block.append(row)
+            block_size += len(row)
+
+            if block_size > block_size_limit:            
+                block_size = 0
+                yield ''.join(block)
+                block = []
+
+        if block_size != 0:
+            yield ''.join(block)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Dfs command line interface.')
@@ -215,27 +219,25 @@ def main():
         dfs_tree.rm(tree_element)
 
     if args.put_paths:
-        with open(args.put_paths[0], 'r') as input:            
-            path = args.put_paths[1]
-            if path.endswith('/'):
-                raise Exception("Can't write file without name.")
-            path, name = path.rsplit('/', 1)    
-            folder = dfs_tree.get_tree_element(path)
+        path = args.put_paths[1]
+        if path.endswith('/'):
+            raise Exception("Can't write file without name.")
+        path, name = path.rsplit('/', 1)    
+        folder = dfs_tree.get_tree_element(path)
 
-            chunks = split(input.read(), len(config['nodes']))
-            indexes = block_manager.put_blocks(chunks)            
-            dfs_tree.put(folder, name, indexes)
+        blocks = split(args.put_paths[0])
+
+        indexes = block_manager.put_blocks(blocks)            
+        dfs_tree.put(folder, name, indexes)
 
     if args.get_path:
         tree_element = dfs_tree.get_tree_element(args.get_path)
         indexes = dfs_tree.get_file_indexes(tree_element)
-        print '\n'.join(block_manager.read_blocks(indexes))
+        for block in block_manager.read_blocks(indexes):
+            print (block), #braces with comma for removing newline
         
     block_manager.save()
     dfs_tree.save()
 
-
 if __name__ == "__main__":
     main()
-
-
