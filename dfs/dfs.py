@@ -24,7 +24,7 @@ class DfsTree:
             next_folder = folder.find(token)
 
             if next_folder is None:
-                folder.append(etree.Element(token, folder="True"))
+                folder.append(etree.Element(token))
             elif not self.is_folder(next_folder):
                 raise Exception('Path {PATH} does not be created: {TOKEN} is file.'.
                     format(PATH=path, TOKEN=token))
@@ -37,20 +37,44 @@ class DfsTree:
     def get_folder(self, path):
         folder = self.tree.xpath('/root' + path.rstrip('/'))
 
-        return folder[0] if len(folder) == 1 else None
+        
+        if len(folder) == 1:
+            return folder[0]
+        else:
+            raise Exception('Path {PATH} is incorrect'.format(PATH=path))
 
-    def get_file_indexes(self, path):
-        file = self.get_folder(path)
+    def get_files_from_folder(self, folder):
+        elementes = []
+        if self.is_folder(folder):
+            for element in folder:
+                elementes.append(element)
+        else:
+            elementes.append(element)
+        return elementes
 
-        if file is not None and not self.is_folder(file):
-            return ast.literal_eval(file.get('index_list'))
-        return None
+    def get_file_indexes_by_path(self, file_path):
+        file = self.get_folder(file_path)
+
+        if not self.is_folder(file):
+            return get_file_indexes(file)
+
+        return []
+
+    def get_file_indexes(self, file):
+        return ast.literal_eval(file.get('index_list'))
+
+    def get_recursive_files_indexes(self, folder):
+        indexes = []
+        if self.is_folder(folder):
+            for element in self.get_files_from_folder(folder):
+                indexes += self.get_recursive_files_indexes(element)
+        else:
+            indexes += self.get_file_indexes(folder)
+        return indexes
+
 
     def put(self, path, name, index_list):
         folder = self.get_folder(path)
-
-        if folder is None:
-            raise Exception('Path {PATH} is incorrect'.format(PATH=path))
 
         if folder.find(name) is not None:
             raise Exception('File {PATH}/{NAME} already exists'.
@@ -61,16 +85,11 @@ class DfsTree:
     def ls(self, path):
         folder = self.get_folder(path)
 
-        if folder is None:
-            raise Exception('Path {PATH} is incorrect'.format(PATH=path))
-
         ls = []
-
-        if self.is_folder(folder):
-            for element in folder:
-                ls.append(element.tag + '/' if self.is_folder(element) else element.tag)
-        else:
-            ls.append(folder.tag)            
+        for element in self.get_files_from_folder(folder):
+            ls.append(element.tag + '/' if self.is_folder(element) else element.tag)                
+        #else:
+        #    ls.append(folder.tag)            
 
         return ls
 
@@ -208,11 +227,10 @@ def main():
     if args.mkdir_path:
         dfs_tree.mkdir(args.mkdir_path)
 
-    if args.rm_path: #TODO make it recursive
-        if not dfs_tree.is_folder(dfs_tree.get_folder(args.rm_path)):
-            indexes = dfs_tree.get_file_indexes(args.rm_path)
-            block_manager.remove_blocks(indexes)
-        
+    if args.rm_path:
+        folder = dfs_tree.get_folder(args.rm_path)
+        indexes = dfs_tree.get_recursive_files_indexes(folder)
+        block_manager.remove_blocks(indexes)
         dfs_tree.rm(args.rm_path)
 
     if args.put_paths:
@@ -227,7 +245,7 @@ def main():
             dfs_tree.put(path, name, indexes)
 
     if args.get_path:
-        indexes = dfs_tree.get_file_indexes(args.get_path)
+        indexes = dfs_tree.get_file_indexes_by_path(args.get_path)
         if indexes is not None:
             print '\n'.join(block_manager.read_blocks(indexes))
         else:

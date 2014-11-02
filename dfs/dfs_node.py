@@ -10,7 +10,6 @@ def read_data(file_path):
         return file.read()
 
 def write_data(file_path, data):
-    print file_path
     with open(file_path, 'w') as file:
         file.write(data)
 
@@ -23,7 +22,7 @@ def parse_args():
 
     parser.add_argument('-p', help='port',
         metavar='port', dest='port', default='5556')
-
+    
     parser.add_argument('-s', help='absolute path to storage',
         metavar='path', dest='path', default='/home/avybornov/dfs_storage')
     
@@ -45,14 +44,12 @@ def main():
         message = socket.recv()
         try:
             message = pickle.loads(message)
-            print message
             if 'read' in message:
                 index = message['read']
                 data = read_data(os.path.join(storage_path, str(index)))
                 socket.send(data)
             elif 'write' in message:
                 index, data = message['write']
-                print os.path.join(storage_path, str(index)), data
                 write_data(os.path.join(storage_path, str(index)), data)
                 socket.send('ok')
             elif 'remove' in message:
