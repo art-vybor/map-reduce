@@ -8,13 +8,13 @@ DFS
 
 Distributed file system is required to map-reduce framework.
 
-On each node, you should run **dfs_node.py** with two arguments - port and storage_path. Like this:
+On each node, you should run *dfs_node.py* with two arguments - port and storage_path. Like this:
 
 ```
     python dfs_node.py -p 5556 -s /home/user_name/storage
 ```
 
-Then you should fill config.json with information about nodes. Now you can use **dfs.py**. Samples of use dfs.py:
+Then you should fill *config.json* with information about nodes. Now you can use *dfs.py*. Samples of use dfs.py:
 
 ```
     python dfs.py -ls /user/
