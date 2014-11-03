@@ -15,32 +15,38 @@ class block_manager:
 
         for dfs_node in self.dfs_nodes:
             dfs_node['socket'] = zmq.Context().socket(zmq.REQ)
-            dfs_node['socket'].connect(dfs_node['url'])
+            dfs_node['socket'].connect('{URL}:{PORT}'.format(URL=dfs_node['url'], PORT=dfs_node['dfs_port']))
 
     def get_index(self):
         index = self.index_map[0]
         self.index_map[0] += 1
         return index
 
+    def split_indexes_by_node(self, indexes):
+        result = {}
+        for index in indexes:
+            node = self.index_map[index]
+            result[node] = result[node] + index if node in result else [index]
+
+        return result
+
     def save(self):
         pickle.dump(self.index_map, open(self.bm_file, 'wb'))
 
-    def read(self, index):
-        request = {'read': index}
+    def send(func_word, data, index):
+        request = {func_word: data}
         dfs_node = self.dfs_nodes[self.index_map[index]]
         dfs_node['socket'].send(pickle.dumps(request))
         return dfs_node['socket'].recv()
 
+    def read(self, index):
+        return send('read', index, index)
+
     def write(self, index, data, dfs_node):
-        request = {'write': (index, data)}
-        dfs_node['socket'].send(pickle.dumps(request))
-        return dfs_node['socket'].recv() == 'ok'
+        return send('remove', (index, data), index) == 'ok' 
 
     def remove(self, index):
-        request = {'remove': index}
-        dfs_node = self.dfs_nodes[self.index_map[index]]
-        dfs_node['socket'].send(pickle.dumps(request))
-        return dfs_node['socket'].recv() == 'ok'
+        return send('remove', index, index) == 'ok'
 
     def remove_blocks(self, indexes):
         for index in indexes:

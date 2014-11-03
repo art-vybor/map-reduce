@@ -1,7 +1,8 @@
 {
     "nodes": [
-        {"url":"tcp://localhost:5556"}
-    ],
-    "block_manager file": "bm.pickle",
-    "fs_structure file": "fs_structure.xml"
+        {
+            "url":"tcp://localhost",
+            "dfs_port":"5556",
+            "mr_port":"5557"}
+    ]
 }

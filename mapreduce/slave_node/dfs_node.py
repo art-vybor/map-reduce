@@ -5,18 +5,6 @@ import sys
 import os
 import pickle
 
-def read_data(file_path):
-    with open(file_path, 'r') as file:
-        return file.read()
-
-def write_data(file_path, data):
-    with open(file_path, 'w') as file:
-        file.write(data)
-
-def remove_data(file_path):
-    os.remove(file_path)
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description='Dfs node.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -28,12 +16,25 @@ def parse_args():
     
     return parser.parse_args()
 
+args = parse_args()
+storage_path = args.path
+port = args.port
+
+def get_filepath(index):
+    return os.path.join(storage_path, str(index))
+
+def read_data(index): 
+    with open(get_filepath(index), 'r') as file:
+        return file.read()
+
+def write_data(index, data):
+    with open(get_filepath(index), 'w') as file:
+        file.write(data)
+
+def remove_data(index):
+    os.remove(get_filepath(index))
 
 def main():
-    args = parse_args()
-    storage_path = args.path
-    port = args.port
-
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
 
@@ -47,17 +48,17 @@ def main():
             if 'read' in message:
                 index = message['read']
                 print 'read: {INDEX}'.format(INDEX=index)
-                data = read_data(os.path.join(storage_path, str(index)))
+                data = read_data(index)
                 socket.send(data)
             elif 'write' in message:
                 index, data = message['write']
                 print 'write: {INDEX}'.format(INDEX=index)
-                write_data(os.path.join(storage_path, str(index)), data)
+                write_data(index, data)
                 socket.send('ok')
             elif 'remove' in message:
                 index = message['remove']
                 print 'remove: {INDEX}'.format(INDEX=index)                
-                remove_data(os.path.join(storage_path, str(index)))
+                remove_data(index)
                 socket.send('ok')
         except:
             pass

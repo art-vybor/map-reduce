@@ -12,8 +12,10 @@ class dfs_tree:
     def save(self):
         self.tree.write(self.fs_file, pretty_print=True)
 
-    def is_folder(self, tree_element):
-        return tree_element.get('index_list') is None
+    def is_exist(self, path):
+        tree_element = self.tree.xpath('/root' + path.rstrip('/'))
+
+        return len(tree_element) == 1
 
     def get_tree_element(self, path):
         tree_element = self.tree.xpath('/root' + path.rstrip('/'))
@@ -22,6 +24,9 @@ class dfs_tree:
             return tree_element[0]
         else:
             raise Exception('Path {PATH} is incorrect'.format(PATH=path))
+
+    def is_folder(self, tree_element):
+        return tree_element.get('index_list') is None
 
     def get_files_from_tree_element(self, tree_element):
         elementes = []

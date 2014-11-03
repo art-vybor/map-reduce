@@ -12,7 +12,7 @@ def parse_config(config_path):
 
         return config_json
 
-config_path = os.path.join(os.path.dirname(__file__), 'etc/config.json')
+config_path = os.path.join(os.path.dirname(__file__), '../etc/config.json')
 config = parse_config(config_path)
 
 def split(input_path, block_size_limit_mb=64):
