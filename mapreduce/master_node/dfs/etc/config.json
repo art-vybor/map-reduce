@@ -1,0 +1,5 @@
+{
+    "nodes": [
+        {"url":"tcp://localhost:5556"}
+    ]
+}

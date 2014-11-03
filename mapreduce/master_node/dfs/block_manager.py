@@ -1,0 +1,74 @@
+import zmq
+import pickle
+import os
+
+
+class block_manager:
+    def __init__(self, config):
+        self.bm_file = os.path.join(os.path.dirname(__file__), 'etc/bm.pickle')
+        self.dfs_nodes = config['nodes']
+
+        self.index_map = pickle.load(open(self.bm_file, 'rb')) if os.path.exists(self.bm_file) else {}
+
+        if 0 not in self.index_map:
+            self.index_map[0] = 1
+
+        for dfs_node in self.dfs_nodes:
+            dfs_node['socket'] = zmq.Context().socket(zmq.REQ)
+            dfs_node['socket'].connect(dfs_node['url'])
+
+    def get_index(self):
+        index = self.index_map[0]
+        self.index_map[0] += 1
+        return index
+
+    def save(self):
+        pickle.dump(self.index_map, open(self.bm_file, 'wb'))
+
+    def read(self, index):
+        request = {'read': index}
+        dfs_node = self.dfs_nodes[self.index_map[index]]
+        dfs_node['socket'].send(pickle.dumps(request))
+        return dfs_node['socket'].recv()
+
+    def write(self, index, data, dfs_node):
+        request = {'write': (index, data)}
+        dfs_node['socket'].send(pickle.dumps(request))
+        return dfs_node['socket'].recv() == 'ok'
+
+    def remove(self, index):
+        request = {'remove': index}
+        dfs_node = self.dfs_nodes[self.index_map[index]]
+        dfs_node['socket'].send(pickle.dumps(request))
+        return dfs_node['socket'].recv() == 'ok'
+
+    def remove_blocks(self, indexes):
+        for index in indexes:
+            if not self.remove(index):
+                raise Exception("Block with index {INDEX} based of server {SERVER} can not be removed".
+                    format(INDEX=index, SERVER=self.dfs_nodes[self.index_map[index]]['url']))
+
+    def put_blocks(self, blocks):
+        dfs_node_index = 0;
+        indexes = []
+
+        for block in blocks:
+            index = self.get_index()
+
+            if self.write(index, block, self.dfs_nodes[dfs_node_index]):
+                self.index_map[index] = dfs_node_index            
+                indexes.append(index)
+            else:
+                raise Exception("Can't write block to {SERVER}".
+                    format(SERVER=self.dfs_nodes[dfs_node_index]['url']))
+            dfs_node_index += 1
+
+            if dfs_node_index == len(self.dfs_nodes):
+                dfs_node_index = 0
+
+        return indexes
+
+    def read_blocks(self, indexes):
+        blocks = []
+        for index in indexes:
+            yield self.read(index)
