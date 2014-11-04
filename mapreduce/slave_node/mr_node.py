@@ -5,6 +5,7 @@ import sys
 import os
 import pickle
 from dfs_node import read_data
+import operator
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Map-reduce node.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -14,6 +15,23 @@ def parse_args():
 
     return parser.parse_args()
 
+def sort_and_union_by_key(pairs):
+    pairs = sorted(pairs) #it's too bad
+
+    result_pairs = []
+
+    new_pair = (pairs[0][0], [])
+    for pair in pairs:
+        if pair[0] == new_pair[0]:
+            new_pair[1].append(pair[1])
+        else:
+            result_pairs.append(new_pair)
+            new_pair = (pair[0], [pair[1]])
+
+    result_pairs.append(new_pair)
+
+    return result_pairs
+
 def do_map_functions(indexes, mr_file):
     with open('mr_file.py', 'w') as f:
         f.write(mr_file)
@@ -22,12 +40,10 @@ def do_map_functions(indexes, mr_file):
     
     result = []
     for index in indexes:
-        print 'index: %s' % index
         data = read_data(index)
-        print data
-        for x in map_func(data):
-            print x
-            result.append(x)
+        for pair in map_func(data):
+            result.append(pair)
+        result = sort_and_union_by_key(result)
 
     return result    
 

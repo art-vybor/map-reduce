@@ -33,20 +33,23 @@ class block_manager:
     def save(self):
         pickle.dump(self.index_map, open(self.bm_file, 'wb'))
 
-    def send(func_word, data, index):
+    def send(self, func_word, data, index):
         request = {func_word: data}
         dfs_node = self.dfs_nodes[self.index_map[index]]
         dfs_node['socket'].send(pickle.dumps(request))
         return dfs_node['socket'].recv()
 
     def read(self, index):
-        return send('read', index, index)
+        return self.send('read', index, index)
 
     def write(self, index, data, dfs_node):
-        return send('remove', (index, data), index) == 'ok' 
+        request = {'write': (index, data)}
+        dfs_node['socket'].send(pickle.dumps(request))
+        return dfs_node['socket'].recv() == 'ok'
+        
 
     def remove(self, index):
-        return send('remove', index, index) == 'ok'
+        return self.send('remove', (index, data), index) == 'ok' 
 
     def remove_blocks(self, indexes):
         for index in indexes:

@@ -55,15 +55,26 @@ def main():
         nm.send(node, 'map', data)
 
     while not nm.all_thread_completed():
-        a = 1
+        pass
 
     result = nm.flush_q()
+
+    result = []
+
+    result.append([('a', [1, 1, 1]), ('b', [1, 1, 1, 1]), ('c', [1, 1])])
+    result.append([('a', [1]), ('c', [1, 1])])
+    result.append([('c', [1, 1]), ('e', [1])])
 
     for x in result:
         print x
 
-    #wait until all map completed
-    #sort stage
+    #sort_and_merge
+
+
+
+
+    #sort and merge stage
+
     #reduce stage
 
     dt.save()
