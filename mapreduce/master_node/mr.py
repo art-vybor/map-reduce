@@ -28,6 +28,31 @@ def parse_args():
     
     return parser.parse_args()
 
+def merge(pairs_list):
+    def append_to_result(res, el):
+        if len(res) > 0 and res[len(res)-1][0] == el[0]:
+            res[len(res)-1] = (res[len(res)-1][0], res[len(res)-1][1] + el[1])
+        else:
+            res.append(el)     
+
+    result = []
+
+    while len(pairs_list) > 0:
+        min_idx = 0
+        i = 1
+        while i < len(pairs_list):
+            if pairs_list[i][0] < pairs_list[min_idx][0]:
+                min_idx = i
+            i+=1
+
+        append_to_result(result, pairs_list[min_idx][0])
+        
+        pairs_list[min_idx] = pairs_list[min_idx][1:len(pairs_list[min_idx])]
+        if len(pairs_list[min_idx]) == 0:
+            pairs_list.pop(min_idx)
+        
+    return result
+
 def main():
     args = parse_args()
 
@@ -59,14 +84,10 @@ def main():
 
     result = nm.flush_q()
 
-    result = []
+    result = merge(result)
 
-    result.append([('a', [1, 1, 1]), ('b', [1, 1, 1, 1]), ('c', [1, 1])])
-    result.append([('a', [1]), ('c', [1, 1])])
-    result.append([('c', [1, 1]), ('e', [1])])
+    print result
 
-    for x in result:
-        print x
 
     #sort_and_merge
 
