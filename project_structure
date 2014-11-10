@@ -1,0 +1,10 @@
+mapreduce/
+|-- dfs.py
+|-- mr.py
+|-- dfs_slave.py
+|-- mr_slave.py
+|-- lib/
+|   |-- dfs_lib.py
+|   |-- dfs_tree.py
+|   |-- block_manager.py
+|   |-- nodes_manager.py
