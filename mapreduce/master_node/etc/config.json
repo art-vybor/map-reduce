@@ -1,8 +1,0 @@
-{
-    "nodes": [
-        {
-            "url":"tcp://localhost",
-            "dfs_port":"5556",
-            "mr_port":"5557"}
-    ]
-}
