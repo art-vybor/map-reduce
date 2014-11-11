@@ -1,12 +1,14 @@
 import argparse
 import zmq
-import time
+from time import time
 import sys
 import os
-import pickle
+import cPickle as pickle
 from lib.dfs_lib import split, read_block, write_block
 from lib.block_manager import block_manager
 import operator
+from mr import merge
+import heapq
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Map-reduce node.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -17,8 +19,24 @@ def parse_args():
     return parser.parse_args()
 
 def sort_and_union_by_key(pairs):
+
     pairs = sorted(pairs) #it's too bad
 
+    result_pairs = []
+
+    new_pair = (pairs[0][0], [])
+    for pair in pairs:
+        if pair[0] == new_pair[0]:
+            new_pair[1].append(pair[1])
+        else:
+            result_pairs.append(new_pair)
+            new_pair = (pair[0], [pair[1]])
+
+    result_pairs.append(new_pair)
+
+    return result_pairs
+
+def union_by_key(pairs):
     result_pairs = []
 
     new_pair = (pairs[0][0], [])
@@ -50,15 +68,20 @@ def do_map_functions(indexes, mr_file, dfs_port):
 
     from mr_file import map_func
     
-    result = []
+    result_dict = {}
 
     for index in indexes:
-        block = read(index, dfs_port)
-        for pair in map_func(block):
-            result.append(pair)
-        result = sort_and_union_by_key(result)
+        with open(os.path.join('/home/avybornov/dfs_storage', str(index)),'r') as block_file:
+            print 'start %s' % index
+            block = block_file.read()
 
-    return result    
+            for x in map_func(block):
+                if x[0] in result_dict:
+                    result_dict[x[0]].append(x[1])
+                else:
+                    result_dict[x[0]] = [x[1]]
+
+    return result_dict 
 
 def do_reduce_functions(pairs, dfs_port):
     from mr_file import reduce_func
@@ -71,7 +94,7 @@ def do_reduce_functions(pairs, dfs_port):
     index = -1
 
     for block in blocks:
-        if write(index, block, dfs_port):
+        if write(index, block, dfs_port):                           
             indexes.append(index)
             index -= 1
         else:
@@ -79,6 +102,30 @@ def do_reduce_functions(pairs, dfs_port):
                     format(INDEX=index))
 
     return indexes
+
+def merge(pairs_list):
+    def append_to_result(res, el):
+        if len(res) > 0 and res[len(res)-1][0] == el[0]:
+            res[len(res)-1][1].append(el[1])
+        else:
+            res.append([el[0], [el[1]]])     
+
+    result = []
+
+    while len(pairs_list) > 0:
+        min_idx = 0
+
+        for i in range(1, len(pairs_list)):
+            if pairs_list[i][0] < pairs_list[min_idx][0]:
+                min_idx = i
+
+        append_to_result(result, pairs_list[min_idx][0])
+        
+        pairs_list[min_idx] = pairs_list[min_idx][1:len(pairs_list[min_idx])]
+        if len(pairs_list[min_idx]) == 0:
+            pairs_list.pop(min_idx)
+        
+    return result    
 
 def main():
     args = parse_args()
@@ -96,8 +143,16 @@ def main():
             if 'map' in message:
                 indexes, mr_file = message['map']                
                 print 'map: {INDEXES}'.format(INDEXES=indexes)
+                start = time()
                 data = do_map_functions(indexes, mr_file, dfs_port)
-                socket.send(pickle.dumps(data))
+                print 'map finished: %ss' % (time() - start)
+
+                print 'pickle started'
+                start = time()
+                data = pickle.dumps(data)
+
+                print 'pickle finished: %ss' % (time() - start)
+                socket.send(data)
             elif 'reduce' in message:
                 pairs = message['reduce']
                 print 'reduce: {NUM} pairs'.format(NUM=len(pairs))

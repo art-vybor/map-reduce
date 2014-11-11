@@ -1,0 +1,5 @@
+#python mapreduce/dfs.py -put $1 /in
+python mapreduce/mr.py -i /in -o /out -mr $2
+#python mapreduce/dfs.py -get /out
+#python mapreduce/dfs.py -rm /in
+python mapreduce/dfs.py -rm /out

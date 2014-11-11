@@ -32,16 +32,9 @@ def remove_block(storage_path, index):
     os.remove(get_filepath(storage_path, index))
 
 def change_block_index(storage_path, old_index, new_index):
-    print old_index, new_index
     old_path = get_filepath(storage_path, convert_index(old_index))
-    print old_index
-    print convert_index(old_index)
     new_path = get_filepath(storage_path, convert_index(new_index))
-    print old_index, new_index
-
-    print old_path, new_path
     os.rename(old_path, new_path)
-    print 'renamed'
 
 def main():
     args = parse_args()

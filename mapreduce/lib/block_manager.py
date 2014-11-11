@@ -34,7 +34,9 @@ class block_manager:
         result = {}
         for index in indexes:
             node = self.index_map[index]
-            result[node] = result[node] + index if node in result else [index]
+            if node not in result:
+                result[node] = []
+            result[node].append(index)
 
         return result
 
@@ -72,4 +74,3 @@ class block_manager:
             if not remove_block(self.get_socket(index), index):
                 raise Exception("Block with index {INDEX} based of server {SERVER} can not be removed".
                     format(INDEX=index, SERVER=self.dfs_nodes[self.index_map[index]]['url']))
-
