@@ -1,9 +1,9 @@
 import zmq
-import pickle
+import marshal
 
 def send(socket, func_word, data):
     request = {func_word: data}
-    socket.send(pickle.dumps(request))
+    socket.send(marshal.dumps(request))
     return socket.recv()
 
 def read_block(socket, index):

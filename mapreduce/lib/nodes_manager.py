@@ -1,5 +1,5 @@
 import zmq
-import pickle
+import marshal
 import os
 import threading
 from Queue import Queue
@@ -18,12 +18,12 @@ class nodes_manager:
 
     def wait_result(self, node):
         result = node['socket'].recv()
-        self.q.put(pickle.loads(result))
+        self.q.put(marshal.loads(result))
 
     def send(self, node_index, func_word, data):
         node = self.nodes[node_index]
         request = {func_word: data, 'dfs_port': node['dfs_port'], 'node': node_index}
-        node['socket'].send(pickle.dumps(request))
+        node['socket'].send(marshal.dumps(request))
         threading.Thread(target = self.wait_result, args = (node, )).start()
 
     def all_thread_completed(self):

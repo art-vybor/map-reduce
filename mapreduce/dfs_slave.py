@@ -1,7 +1,7 @@
 import argparse
 import zmq
 import os
-import pickle
+import marshal
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Dfs node.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -50,7 +50,7 @@ def main():
     while True:
         message = socket.recv()
         try:
-            message = pickle.loads(message)
+            message = marshal.loads(message)
             if 'read' in message:
                 index = message['read']
                 print 'read {INDEX}'.format(INDEX=index)

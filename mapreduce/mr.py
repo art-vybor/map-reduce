@@ -1,9 +1,8 @@
 import json
 import argparse
 import os
-import pickle
 
-from time import sleep
+from time import time
 from lib.dfs_tree import dfs_tree
 from lib.block_manager import block_manager
 from lib.nodes_manager import nodes_manager
@@ -29,32 +28,7 @@ def parse_args():
     
     return parser.parse_args()
 
-def merge(pairs_list):
-    def append_to_result(res, el):
-        if len(res) > 0 and res[len(res)-1][0] == el[0]:
-            res[len(res)-1] = (res[len(res)-1][0], res[len(res)-1][1] + el[1])
-        else:
-            res.append(el)     
-
-    result = []
-
-    while len(pairs_list) > 0:
-        min_idx = 0
-
-        for i in range(1, len(pairs_list)):
-            if pairs_list[i][0] < pairs_list[min_idx][0]:
-                min_idx = i
-
-        append_to_result(result, pairs_list[min_idx][0])
-        
-        pairs_list[min_idx] = pairs_list[min_idx][1:len(pairs_list[min_idx])]
-        if len(pairs_list[min_idx]) == 0:
-            pairs_list.pop(min_idx)
-        
-    return result
-
-
-def merge1(pairs_dicts):
+def merge(pairs_dicts):
     result = {}
 
     for pairs_dict in pairs_dicts:
@@ -67,21 +41,10 @@ def merge1(pairs_dicts):
 
     return result
 
-
-
 def get_rand_node(key, num_of_nodes):
     return (key.__hash__()) % num_of_nodes
 
-def get_reduce_blocks_by_node(pairs, num_of_nodes):
-    result = {}
-
-    for pair in pairs:
-        node = get_rand_node(pair[0], num_of_nodes)
-        result[node] = result[node] + [pair] if node in result else [pair]
-
-    return result
-
-def get_reduce_blocks_by_node1(pairs_dict, num_of_nodes):
+def get_reduce_blocks_by_node(pairs_dict, num_of_nodes):
     result = {}
 
     for key in pairs_dict:
@@ -92,6 +55,41 @@ def get_reduce_blocks_by_node1(pairs_dict, num_of_nodes):
             result[node] = [(key, pairs_dict[key])]
 
     return result
+
+def do_map(nm, indexes_by_node, mr_file):
+    for node in indexes_by_node:
+        data = (indexes_by_node[node], mr_file)
+        nm.send(node, 'map', data)    
+
+    while not nm.all_thread_completed():
+        pass
+
+    return nm.flush_q()
+
+def do_reduce(nm, blocks_by_node):
+    for node in blocks_by_node:
+        data = blocks_by_node[node]
+        nm.send(node, 'reduce', data)
+
+    while not nm.all_thread_completed():
+        pass
+
+    return nm.flush_q()
+def rename_reduce_results(bm, reduce_results):
+    indexes = []
+
+    for reduce_result in reduce_results:
+        indexes_for_node, node_index = reduce_result
+
+        for _index in indexes_for_node:
+            index = bm.get_index()
+            
+            if bm.change_block_index(_index, index, node_index):
+                indexes.append(index)   
+                bm.index_map[index] = node_index
+            else:
+                raise Exception("Can't change index {OLD} to {NEW} by node {NODE}".format(OLD=_index, NEW=index, NODE=node_index))
+    return indexes
 
 
 def main():
@@ -112,66 +110,35 @@ def main():
     with open(args.mr_path, 'r') as f:
         mr_file = f.read()
 
+    print 'task %s started' % (args.mr_path)
+    start = time()
 
     #map
     indexes = dt.get_file_indexes(input_file)
     indexes_by_node = bm.split_indexes_by_node(indexes)
 
+    map_result = do_map(nm, indexes_by_node, mr_file)
     
+    print 'map finished %ss' % (time() - start)
+    start = time()
 
-    for node in indexes_by_node:
-        data = (indexes_by_node[node], mr_file)
-        nm.send(node, 'map', data)
-
-    print 'map started'
-
-    while not nm.all_thread_completed():
-        pass
-
-    print '  -  finished'
-    map_result = nm.flush_q()
-
-    print 'merge started'
     #merge
-    merged_result = merge1(map_result)
-    
-    blocks_by_node = get_reduce_blocks_by_node1(merged_result, len(nm.nodes))
+  
+    merged_result = merge(map_result)    
+    blocks_by_node = get_reduce_blocks_by_node(merged_result, len(nm.nodes))
 
-    print '  -  finished'
+    print 'merge finished %ss' % (time() - start)
+    start = time()
 
     #reduce
-    print 'reduce started'
-    for node in blocks_by_node:
-        data = blocks_by_node[node]
-        nm.send(node, 'reduce', data)
+    reduce_results = do_reduce(nm, blocks_by_node)
 
-    while not nm.all_thread_completed():
-        pass
-
-    reduce_results = nm.flush_q()
-
-    indexes = []
-
-    for reduce_result in reduce_results:
-        indexes_for_node, node_index = reduce_result
-
-        for _index in indexes_for_node:
-            index = bm.get_index()
-            
-            if bm.change_block_index(_index, index, node_index):
-                indexes.append(index)   
-                bm.index_map[index] = node_index
-            else:
-                raise Exception("Can't change index {OLD} to {NEW} by node {NODE}".format(OLD=_index, NEW=index, NODE=node_index))
-    print '  -  finished'            
-
-    print indexes
+    indexes = rename_reduce_results(bm, reduce_results)
+    
     _, name = args.output_path.rsplit('/', 1)    
     dt.put(output_dirname, name, indexes)
-    
 
-    
-    #print reduce_result
+    print 'reduce finished %ss' % (time() - start)
 
     dt.save()
     bm.save()
