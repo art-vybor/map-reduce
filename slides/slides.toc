@@ -2,5 +2,5 @@
 \select@language {russian}
 \beamer@sectionintoc {1}{\IeC {\CYRP }\IeC {\cyro }\IeC {\cyrs }\IeC {\cyrt }\IeC {\cyra }\IeC {\cyrn }\IeC {\cyro }\IeC {\cyrv }\IeC {\cyrk }\IeC {\cyra } \IeC {\cyrz }\IeC {\cyra }\IeC {\cyrd }\IeC {\cyra }\IeC {\cyrch }\IeC {\cyri }}{3}{0}{1}
 \beamer@sectionintoc {2}{\IeC {\CYRK }\IeC {\cyro }\IeC {\cyrn }\IeC {\cyrc }\IeC {\cyre }\IeC {\cyrp }\IeC {\cyrc }\IeC {\cyri }\IeC {\cyrya } map-reduce}{4}{0}{2}
-\beamer@sectionintoc {3}{\IeC {\CYRA }\IeC {\cyrr }\IeC {\cyrh }\IeC {\cyri }\IeC {\cyrt }\IeC {\cyre }\IeC {\cyrk }\IeC {\cyrt }\IeC {\cyru }\IeC {\cyrr }\IeC {\cyra }}{8}{0}{3}
+\beamer@sectionintoc {3}{\IeC {\CYRA }\IeC {\cyrr }\IeC {\cyrh }\IeC {\cyri }\IeC {\cyrt }\IeC {\cyre }\IeC {\cyrk }\IeC {\cyrt }\IeC {\cyru }\IeC {\cyrr }\IeC {\cyra }}{6}{0}{3}
 \beamer@sectionintoc {4}{\IeC {\CYRO }\IeC {\cyrt }\IeC {\cyrch }\IeC {\cyryo }\IeC {\cyrt }}{10}{0}{4}

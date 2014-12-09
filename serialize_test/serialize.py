@@ -13,15 +13,19 @@ for i in range(0, 100):
     d[id_generator()] = l
 
 
-# d = ''
-# for i in range(0,100000):
-#     d += id_generator(100)
+#d = ''
+#for i in range(0,100000):
+#    d += id_generator(100)
 
 # print 'len: %s' % len(d)
 
-def make_test(encode, decode):
+def make_test(encode, decode, protocol=None):
+
     start = time()
-    d_encode = encode(d)
+    if protocol is not None:
+        d_encode = encode(d, protocol=protocol)
+    else:
+        d_encode = encode(d)
     encode_time = time() - start
     length = len(d_encode)
 
@@ -29,8 +33,10 @@ def make_test(encode, decode):
     d_decode = decode(d_encode)
     decode_time = time() - start
 
-
-    print '---%s----' % (encode.__module__)
+    if protocol is not None:
+        print '---%s(%s)----' % (encode.__module__, protocol)
+    else:
+        print '---%s----' % (encode.__module__)
     print 'encode time: %s' % (encode_time)
     print 'decode time: %s' % (decode_time)
     print 'total time: %s' % (decode_time+encode_time)
@@ -44,7 +50,13 @@ import cjson
 import marshal
 
 make_test(pickle.dumps, pickle.loads)
+make_test(pickle.dumps, pickle.loads, protocol=0)
+make_test(pickle.dumps, pickle.loads, protocol=1)
+make_test(pickle.dumps, pickle.loads, protocol=2)
 make_test(cPickle.dumps, cPickle.loads)
+make_test(cPickle.dumps, cPickle.loads, protocol=0)
+make_test(cPickle.dumps, cPickle.loads, protocol=1)
+make_test(cPickle.dumps, cPickle.loads, protocol=2)
 make_test(json.dumps, json.loads)
 make_test(cjson.encode, cjson.decode)
 make_test(marshal.dumps, marshal.loads)

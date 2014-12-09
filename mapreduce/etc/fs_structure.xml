@@ -1,15 +1,4 @@
 <root>
-  <user>
-    <vdontsov/>
-    <avybornov>
-      <a1>
-        <a2/>
-      </a1>
-    </avybornov>
-    <out index_list="[280]"/>
-  </user>
-  <in index_list="[377, 378]"/>
-  <in_1gb index_list="[382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397]"/>
-  <in_small index_list="[400]"/>
-  <out index_list="[420]"/>
+  <in index_list="[18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33]"/>
+  <out index_list="[34]"/>
 </root>
