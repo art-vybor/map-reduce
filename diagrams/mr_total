@@ -1,0 +1,25 @@
+[in]->[dfs_in 1]
+[in]->[dfs_in 2]
+[in]->[dfs_in 3]
+
+[dfs_in 1]->[map 1]
+[dfs_in 2]->[map 2]
+[dfs_in 3]->[map 3]
+
+[map 1]->[reduce 1]
+[map 1]->[reduce 2]
+[map 1]->[reduce 3]
+[map 2]->[reduce 1]
+[map 2]->[reduce 2]
+[map 2]->[reduce 3]
+[map 3]->[reduce 1]
+[map 3]->[reduce 2]
+[map 3]->[reduce 3]
+
+[reduce 1]->[dfs_out 1]
+[reduce 2]->[dfs_out 2]
+[reduce 3]->[dfs_out 3]
+
+[dfs_out 1]->[out]
+[dfs_out 2]->[out]
+[dfs_out 3]->[out]

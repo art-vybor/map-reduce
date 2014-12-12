@@ -1,0 +1,19 @@
+[dfs_in 1] -> [map 1]
+[dfs_in 2] -> [map 2]
+[dfs_in 3] -> [map 3]
+
+[map 1] -> [pool_reducer 1]
+[map 1] -> [pool_reducer 2]
+[map 1] -> [pool_reducer 3]
+
+[map 2] -> [pool_reducer 1]
+[map 2] -> [pool_reducer 2]
+[map 2] -> [pool_reducer 3]
+
+[map 3] -> [pool_reducer 1]
+[map 3] -> [pool_reducer 2]
+[map 3] -> [pool_reducer 3]
+
+[pool_reducer 1]  -> [reduce 1]
+[pool_reducer 2]  -> [reducer 2]
+[pool_reducer 3]  -> [reducer 3]
