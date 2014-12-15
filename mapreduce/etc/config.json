@@ -3,6 +3,7 @@
         {
             "url":"tcp://localhost",
             "dfs_port":"5556",
-            "mr_port":"5557"}
+            "mr_port":"5557",
+            "mr_slave_port":"5558"}
     ]
 }

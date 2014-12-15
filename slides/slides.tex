@@ -78,47 +78,100 @@
             \item Между стадиями $map$ и $reduce$ происходит группировка и сортировка данных.
             
         \end{itemize} 
-    \end{frame}   
+    \end{frame}
+
+    \begin{frame}
+    \frametitle{Map-reduce на примере - Поиск общих друзей}
+        \begin{itemize}
+            \item {\bfЗадача:} Есть граф пользователей некоторого ресурса, заданный в виде строчек: <<пользователь - друг1 друг2 ...>>. Для каждой пары пользователей найти общих друзей.
+            \item Разберём задачу на следующих входных данных: \\
+                \begin{itemize}
+                    \item A - B C D
+                    \item B - A C
+                    \item C - A B D
+                    \item D - A C
+                \end{itemize}          
+        \end{itemize} 
+    \end{frame}  
+
+
+    \begin{frame}
+    \frametitle{Map-reduce на примере - Поиск общих друзей}
+        \begin{itemize}
+            \item На стадии map преобразовываем пару (пользователь, друзья) в множество пар следующим образом:
+            \begin{itemize}
+                \item (A, B C D) -> (A B, B C D), (A C, B C D), (A D, B C D)
+                \item (B, A C) -> (A B, A C), (B C, A C)
+                \item (C, A B D) -> (A C, A B D), (B C, A B D), (C D, A B D)
+                \item (D, A C) -> (A D, A C), (C D, A C)
+            \end{itemize}
+        \end{itemize}
+    \end{frame} 
+
+    \begin{frame}
+    \frametitle{Map-reduce на примере - Поиск общих друзей}
+        \begin{itemize}
+            \item Сливаем результаты полученные на стадии map, получаем список пар:
+            \begin{itemize}
+                \item (A B, [B C D, A C])
+                \item (A C, [B C D, A B D])
+                \item (A D, [B C D, A C])
+                \item (B C, [A B D, A C])
+                \item (C D, [A B D, A C])
+            \end{itemize}
+        \end{itemize}
+    \end{frame} 
+
+    \begin{frame}
+    \frametitle{Map-reduce на примере - Поиск общих друзей}
+        \begin{itemize}
+            \item На стадии reduce пересекаем с друг другом все элементы списка значений и получаем:
+            \begin{itemize}
+                \item (A B, C)
+                \item (A C, B D)
+                \item (A D, C)
+                \item (B C, A)
+                \item (C D, A)
+            \end{itemize}
+        \end{itemize}
+    \end{frame} 
 
 \section{Архитектура}
-    % \begin{frame}
-    % \frametitle{Архитектура распределённой файловой системы}
-    %     \begin{figure}[h!]
-    %         \includegraphics[scale=0.3]{dfs.png}
-    %     \end{figure}
-    % \end{frame}
+
+    \begin{frame}
+    \frametitle{Архитектура распределённого map-reduce}
+        \begin{figure}[h!]
+            \begin{center}
+                \includegraphics[scale=0.5]{map-reduce.png}
+            \end{center}
+        \end{figure}        
+    \end{frame}
+
 
     \begin{frame}
     \frametitle{Как работает распределённая файловая система}
         \begin{itemize}
             \item Файл разбивается на блоки фиксированного размера (64мб).
-            \item Разбиение файла на блоки порождает генератор.
             \item Получившиеся блоки распределяются по машинам.
+            \item Cтруктура фс - дерево, в котором узлы соответствуют папкам, а листья - файлам.
+            \item Файл представляет собой список индексов.
+            \item BlockManager - класс, раздающий новых индексы и содержащий таблицу отображения блоков в конкретную ноду.
         \end{itemize}
     \end{frame}
 
-
-    % \begin{frame}
-    % \frametitle{Архитектура распределённого map-reduce}
-    %     \begin{figure}[h!]
-    %         \includegraphics[scale=0.3]{map-reduce.png}
-    %     \end{figure}
-        
-    % \end{frame}
 
 
     \begin{frame}
     \frametitle{Как работает распределённый map-reduce}
         \begin{itemize}
-            \item На вход получает адреса файлов в DFS для ввода и вывода, а также файл с функциями map и reduce.
+            \item На вход подаются адреса файлов в DFS для ввода и вывода, а также файл с функциями map и reduce.
             \item Стадии выполнения:
             \begin{itemize}
                 \item Получение по входному файлу списка индексов в DFS.
                 \item Разбиение списка индексов по узлам.
-                \item Выполнение функций map на узлах.
-                \item Слияние результатов функций map.
-                \item Разбиение полученного результата по узлам.
-                \item Выполнение функций reduce на узлах.
+                \item Выполнение стадии map на узлах.
+                \item Распределение данных между узлами.
+                \item Выполнение стадии reduce на узлах.
                 \item Добавление результатов функций reduce в виде файла в DFS.
                 \begin{itemize}
                     \item Переименование результатов.
@@ -128,20 +181,43 @@
         \end{itemize}        
     \end{frame}
 
+    \begin{frame}
+    \frametitle{Архитектура распределённого map-reduce}
+        \begin{figure}[h!]
+            \begin{center}
+                \includegraphics[scale=0.25]{total_data.png}
+            \end{center}
+        \end{figure}        
+    \end{frame}
+
 
     \begin{frame}
     \frametitle{Как работает map на узлах}
         \begin{itemize}
             \item По списку индексов получаются данные путём обращения к узлу dfs, находящемуся на этой машине.
             \item Для каждого индекса выполняется переданная функция map.
-            \item Результаты всех map аггрегируются в ассоциативный массив (python dictionary).
-            \item Полученный результат передаётся на главный узел.
+            \item Результаты каждого map в виде ассоциативного массива передаются структуре reduce pool.
+            \item По окончании оставшиеся в reduce pool данные отправляются по узлам.
         \end{itemize}        
     \end{frame}
 
     \begin{frame}
     \frametitle{Как работает reduce на узлах}
+
         \begin{itemize}
+            \item Cливает результаты стадий map и распределяет их по узлам.
+            \item Cтруктура reduce pool состоит из набора ассоциативных массивов, каждый из которых соответствует одному slave узлу.
+            \item Данные переданные в структуру reduce pool равномерно распределяются среди набора массивов.
+            \item После добавления новых данных структура проверяет, не превышает ли один элементов набора установленного размера. При превышении установленного размера элемент отправляется на соответсвующий узел. 
+            \item На узлах, все полученные от reduce pool данные аккумулируются.
+        \end{itemize}        
+    \end{frame}
+
+
+    \begin{frame}
+    \frametitle{Как работает reduce на узлах}
+        \begin{itemize}
+            \item Разбивает все данные на блоки пар, по возможности, не превышающие фиксированного размера с точность до одной пары.
             \item Для каждой полученный пары выполняется переданная функция reduce.
             \item Полученный результат разбивается на блоки равного размера (64мб).
             \item Блоки записываются в dfs на узел, где выполнялся reduce под псевдоименами.
@@ -161,9 +237,22 @@
     \end{frame}
 
     \begin{frame}
+    \frametitle{Что не реализовано}
+        \begin{itemize}            
+            \item Существует узкое место при аггрегации данных перед стадией reduce (reduce pool) - возможно переполнение оперативной памяти. Исправить можно следующим образом:
+            \begin{itemize}
+                \item При получении данных, они добавляются в ассоциативный массив.
+                \item При превышении массивом установленного размера он сортируется и выгружается на диск.
+                \item Перед выполнением стадии reduce необходимо отсортировать и выгрузить на диск оставшиеся в массиве данные.
+                \item Во время выполнения стадии reduce полученные файлы на лету сливаются и обрабатываются функцией reduce.
+            \end{itemize} 
+        \end{itemize} 
+    \end{frame}
+
+    \begin{frame}
     \frametitle{Что предстоит сделать}
         \begin{itemize}
-            \item Развить map-reduce для работы с большими данными.
+            \item Подготовить код распределённого map-reduce для тестов.
             \item Протестировать полученную систему на больших данных и проанализировать результаты.
         \end{itemize} 
     \end{frame}

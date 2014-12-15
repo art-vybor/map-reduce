@@ -1,4 +1,5 @@
 import argparse
+import threading
 import zmq
 from time import time
 import sys
@@ -6,14 +7,28 @@ import os
 import marshal
 from lib.dfs_lib import split, read_block, write_block
 from lib.block_manager import block_manager
+from lib.key_value_pool import key_value_pool
 import operator
 import heapq
+import shelve
+import json
+
+def parse_config(config_path):
+     with open(config_path) as config_file:
+         config_json = json.load(config_file)
+         return config_json
+
+config_path = os.path.join(os.path.dirname(__file__), 'etc/config.json')
+config = parse_config(config_path)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Map-reduce node.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-p', help='port',
-        metavar='port', dest='port', default='5557')
+    parser.add_argument('-p1', help='port used by mr.py',
+        metavar='port mr', dest='port_mr', default='5557')
+
+    parser.add_argument('-p2', help='port user by mr_slave.py',
+        metavar='port mr_slave', dest='port_mr_slave', default='5558')
 
     return parser.parse_args()
 
@@ -29,30 +44,44 @@ def write(index, block, dfs_port):
     return write_block(get_socket(dfs_port), index, block)
 
 def do_map_functions(indexes, mr_file, dfs_port):
-    with open('mr_file.py', 'w') as f:
-        f.write(mr_file)
+    import mr_file as mr    
+    reload(mr)
 
-    from mr_file import map_func
-    
-    result_dict = {}
+    kv_pool = key_value_pool(config)
 
     for index in indexes:
-        block = read(index, dfs_port)
+        block = read(index, dfs_port) #TODO maybe make it inline (without connection to localhost).
+        pool_time = 0.0
 
-        for x in map_func(block):
-            if x[0] in result_dict:
-                result_dict[x[0]].append(x[1])
-            else:
-                result_dict[x[0]] = [x[1]]
+        start = time()
 
-    return result_dict 
+        kv_dict = {}
+        for row in block.split('\n'):
+            for key, value in mr.map_func(row):
+                if key in kv_dict:
+                    kv_dict[key].append(value)
+                else:
+                    kv_dict[key] = [value]
+                    
+        kv_pool.add_dict(kv_dict)
+
+        end = time()
+        pool_time = end - start
+
+        print 'pool_time for block %i %fs' % (index, pool_time)
+        
+    kv_pool.flush(force=True)
 
 def do_reduce_functions(pairs, dfs_port):
-    from mr_file import reduce_func
+    import mr_file as mr
 
-    pairs = [reduce_func(*pair) for pair in pairs]
+    res_pairs = []
 
-    blocks = split(pairs, lambda x: '%s %s\n' % (x))
+    for pair in pairs.iteritems():
+        res_pairs.append(mr.reduce_func(*pair))
+
+    blocks = split(res_pairs, lambda x: '%s %s\n' % (x))
+
     indexes = []
 
     index = -1
@@ -62,15 +91,19 @@ def do_reduce_functions(pairs, dfs_port):
             indexes.append(index)
             index -= 1
         else:
-             raise Exception("Can't write block with index {INDEX}".
+            raise Exception("Can't write block with index {INDEX}".
                     format(INDEX=index))
 
     return indexes 
 
-def main():
-    args = parse_args()
-    port = args.port
+def mr_extend(d1, d2):
+    for k, v in d2.iteritems():
+        if k in d1:
+            d1[k].extend(v)
+        else:
+            d1[k] = v
 
+def map_reduce_server(port):
     socket = zmq.Context().socket(zmq.REP)
     socket.bind("tcp://*:{PORT}".format(PORT=port))
 
@@ -83,29 +116,72 @@ def main():
             if 'map' in message:
                 indexes, mr_file = message['map']                
                 print 'map: {INDEXES}'.format(INDEXES=indexes)
-
                 start = time()
-                data = do_map_functions(indexes, mr_file, dfs_port)
-                print 'map finished: %ss' % (time() - start)
 
-                start = time()
-                data = marshal.dumps(data)
-                print 'serialize finished: %ss' % (time() - start)
+                with open('mr_file.py', 'w') as f: #TODO replace dest dir
+                    f.write(mr_file)
 
-                socket.send(data)
-            elif 'reduce' in message:
-                pairs = message['reduce']
-                print 'reduce: {NUM} pairs'.format(NUM=len(pairs))
-
-                start = time()
-                indexes = do_reduce_functions(pairs, dfs_port)
-                print 'reduce finished: %ss' % (time() - start)
+                do_map_functions(indexes, mr_file, dfs_port)
                 
+                print 'map finished: %ss' % (time() - start)
+                socket.send(marshal.dumps('ok'))
+
+            elif 'reduce' in message:
+                kv_store = shelve.open('kv_store')
+                print 'reduce: {NUM} pairs'.format(NUM=len(kv_store))
+
+                start = time()
+                
+                indexes = do_reduce_functions(kv_store, dfs_port)
+
+                kv_store.clear()
+                kv_store.close()
+
+                print 'reduce finished: %ss' % (time() - start)
                 socket.send(marshal.dumps((indexes, message['node'])))
+            else:
+                print 'incorrect request'
 
         except Exception as inst:
-            print 'ERROR %s' % inst
+            print 'ERROR (map_reduce): %s' % inst
             
+def add_pairs_server(port):
+    socket = zmq.Context().socket(zmq.REP)
+    socket.bind("tcp://*:{PORT}".format(PORT=port))
+
+    while True:
+        message = socket.recv()
+        try:
+            message = marshal.loads(message)
+            dfs_port = message['dfs_port']                
+
+            if 'add_pairs' in message:
+                kv_dict = message['add_pairs']
+                print '\tadd_pairs: {NUM} pairs to add'.format(NUM=len(kv_dict))
+
+                start = time()
+
+                kv_store = shelve.open('kv_store', protocol=1, writeback=True) #TODO rename
+
+                mr_extend(kv_store, kv_dict)
+
+                kv_store.close()
+
+                print '\tadd_pairs finished: %ss' % (time() - start)
+                socket.send(marshal.dumps('ok'))
+            else:
+                print '\tincorrect request'
+
+        except Exception as inst:
+            print 'ERROR (add_pairs): %s' % inst
+
+def main():
+    args = parse_args()
+    port_mr = args.port_mr
+    port_mr_slave = args.port_mr_slave
+
+    threading.Thread(target = map_reduce_server, args = (port_mr, )).start()
+    threading.Thread(target = add_pairs_server, args = (port_mr_slave, )).start()
 
 if __name__ == "__main__":
     main()

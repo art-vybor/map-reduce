@@ -28,53 +28,23 @@ def parse_args():
     
     return parser.parse_args()
 
-def merge(pairs_dicts):
-    result = {}
-
-    for pairs_dict in pairs_dicts:
-
-        for key in pairs_dict:
-            if key in result:
-                result[key].extend(pairs_dict[key])
-            else:
-                result[key] = pairs_dict[key]
-
-    return result
-
-def get_rand_node(key, num_of_nodes):
-    return (key.__hash__()) % num_of_nodes
-
-def get_reduce_blocks_by_node(pairs_dict, num_of_nodes):
-    result = {}
-
-    for key in pairs_dict:
-        node = get_rand_node(key, num_of_nodes)
-        if node in result:
-            result[node].append((key, pairs_dict[key]))
-        else:
-            result[node] = [(key, pairs_dict[key])]
-
-    return result
-
 def do_map(nm, indexes_by_node, mr_file):
     for node in indexes_by_node:
         data = (indexes_by_node[node], mr_file)
-        nm.send(node, 'map', data)    
+        nm.send(node, 'map', data)
 
-    while not nm.all_thread_completed():
-        pass
+    nm.wait()
+
+    return nm.flush_q()
+
+def do_reduce(nm):
+    for node in range(0, len(nm.nodes)):
+        nm.send(node, 'reduce')
+
+    nm.wait()
 
     return nm.flush_q()
 
-def do_reduce(nm, blocks_by_node):
-    for node in blocks_by_node:
-        data = blocks_by_node[node]
-        nm.send(node, 'reduce', data)
-
-    while not nm.all_thread_completed():
-        pass
-
-    return nm.flush_q()
 def rename_reduce_results(bm, reduce_results):
     indexes = []
 
@@ -117,21 +87,13 @@ def main():
     indexes = dt.get_file_indexes(input_file)
     indexes_by_node = bm.split_indexes_by_node(indexes)
 
-    map_result = do_map(nm, indexes_by_node, mr_file)
+    do_map(nm, indexes_by_node, mr_file)
     
     print 'map finished %ss' % (time() - start)
     start = time()
 
-    #merge
-  
-    merged_result = merge(map_result)    
-    blocks_by_node = get_reduce_blocks_by_node(merged_result, len(nm.nodes))
-
-    print 'merge finished %ss' % (time() - start)
-    start = time()
-
     #reduce
-    reduce_results = do_reduce(nm, blocks_by_node)
+    reduce_results = do_reduce(nm)
 
     indexes = rename_reduce_results(bm, reduce_results)
     
