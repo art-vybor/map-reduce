@@ -1,0 +1,326 @@
+% utf-8 ru, unix eolns
+\documentclass[12pt,a4paper,oneside]{extarticle}
+    \righthyphenmin=2 %минимально переносится 2 символа %%%
+    \sloppy
+
+\title{Курсач: <<Молекулярное моделирование>>}
+
+% Рукопись оформлена в соответствии с правилами оформления 
+% электронной версии авторского оригинала, 
+% принятыми в Издательстве МГТУ им. Н.Э. Баумана.
+
+\usepackage{geometry} % А4, примерно 28-31 строк(а) на странице 
+    \geometry{paper=a4paper}
+    \geometry{includehead=false} % Нет верх. колонтитула
+    \geometry{includefoot=true}  % Есть номер страницы
+    \geometry{bindingoffset=0mm} % Переплет    : 0  мм
+    \geometry{top=20mm}          % Поле верхнее: 20 мм
+    \geometry{bottom=25mm}       % Поле нижнее : 25 мм 
+    \geometry{left=25mm}         % Поле левое  : 25 мм
+    \geometry{right=25mm}        % Поле правое : 25 мм
+    \geometry{headsep=10mm}  % От края до верх. колонтитула: 10 мм
+    \geometry{footskip=20mm} % От края до нижн. колонтитула: 20 мм 
+
+\usepackage{cmap}
+\usepackage[T2A]{fontenc} 
+\usepackage[utf8x]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{misccorr}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+%\usepackage{cm-super} %человеческий рендер русских шрифтов
+
+\setlength{\parindent}{1.25cm}  % Абзацный отступ: 1,25 см
+\usepackage{indentfirst}        % 1-й абзац имеет отступ
+
+\usepackage{setspace}   
+
+\onehalfspacing % Полуторный интервал между строками
+
+\makeatletter
+\renewcommand{\@oddfoot }{\hfil\thepage\hfil} % Номер стр.
+\renewcommand{\@evenfoot}{\hfil\thepage\hfil} % Номер стр.
+\renewcommand{\@oddhead }{} % Нет верх. колонтитула
+\renewcommand{\@evenhead}{} % Нет верх. колонтитула
+\makeatother
+
+\usepackage{fancyvrb}
+
+\usepackage[pdftex]{graphicx}  % поддержка картинок для пдф
+%\graphicspath{{noiseimages/}} %картинки в папке с tex файлом
+%\DeclareGraphicsExtensions{.jpg,.png}
+
+
+\renewcommand{\labelenumi}{\theenumi.} %меняет вид нумерованного списка
+
+\usepackage{perpage} %нумерация сносок 
+\MakePerPage{footnote}
+
+\usepackage[all]{xy} %поддержка графов
+
+\usepackage{listings} %листинги
+
+
+\usepackage{url}
+
+
+\usepackage{tikz} %для рисования графиков
+\usepackage{pgfplots}
+
+
+\usepackage{ccaption}%изменяет подпись к рисунку
+\makeatletter 
+\renewcommand{\fnum@figure}[1]{Рисунок~\thefigure~---~\sffamily}
+\makeatother
+
+\begin{document}
+\pgfplotsset{compat=1.8}
+
+\thispagestyle{empty}
+\newpage
+{
+\centering
+
+
+\textbf{
+МОСКОВСКИЙ ГОСУДАРСТВЕННЫЙ ТЕХНИЧЕСКИЙ УНИВЕРСИТЕТ ИМЕНИ Н. Э. БАУМАНА \\
+Факультет информатики и систем управления \\
+Кафедра теоретической информатики и компьютерных технологий}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+
+\vfill
+
+
+Курсовой проект \\
+по курсу <<Компьютерные системы и сети>>
+
+\bigskip
+
+{\large <<Фреймворк и файловая система для распределённой обработки больших данных в рамках концепции map-reduce>>}
+\bigskip
+
+\vfill
+
+
+
+\hfill\parbox{4cm} {
+Выполнил:\\
+студент ИУ9-91 \hfill \\
+Выборнов А. И.\hfill \medskip\\
+Руководитель:\\
+Дубанов А. В.\hfill
+}
+
+
+\vspace{\fill}
+
+Москва \number\year
+\clearpage
+}
+
+
+\tableofcontents
+
+\clearpage
+
+
+\section*{Введение}
+\addcontentsline{toc}{section}{Введение}
+   
+\clearpage
+
+\section{Теоретическая часть}
+    \subsection{Map-reduce}
+        \begin{itemize}
+            \item Структура (key, value) - пара (ключ, значение).
+            \item Программирование представляет собой определение двух функций:
+            \begin{itemize}
+                \item $map: (key, value)\rightarrow[(key, value)]$
+                \item $reduce: (key, [value])\rightarrow[(key, value)]$
+            \end{itemize}
+            \item Между стадиями $map$ и $reduce$ происходит группировка и сортировка данных.
+        \end{itemize}
+
+        Картинка иллюстрирующая процесс, более подробное описание как он работает.
+
+        \subsubsection{Зачем нужен map-reduce}
+            \begin{itemize}
+                \item Обработка больших данных (Big Data).
+                \begin{itemize}
+                    \item Вычисления превосходят возможности одной машины.  
+                    \item Данные не помещаются в памяти, необходимо обращаться к диску.
+                    \item Можно хранить много данных, но задержки и пропускная способность оборудования растут пропорционально данным.
+                \end{itemize}
+                \item Удобная абстракция для построения алгоритмов обработки больших данных.
+                \item Устойчивость к отказам.            
+            \end{itemize} 
+
+        \subsubsection{Пример применения map-reduce}
+            \begin{itemize}
+                \item {\bfЗадача:} Есть граф пользователей некоторого ресурса, заданный в виде строчек: <<пользователь - друг1 друг2 ...>>. Для каждой пары пользователей найти общих друзей.
+                \item Разберём задачу на следующих входных данных: \\
+                    \begin{itemize}
+                        \item A - B C D
+                        \item B - A C
+                        \item C - A B D
+                        \item D - A C
+                    \end{itemize}          
+                \item На стадии map преобразовываем пару (пользователь, друзья) в множество пар следующим образом:
+                \begin{itemize}
+                    \item (A, B C D) -> (A B, B C D), (A C, B C D), (A D, B C D)
+                    \item (B, A C) -> (A B, A C), (B C, A C)
+                    \item (C, A B D) -> (A C, A B D), (B C, A B D), (C D, A B D)
+                    \item (D, A C) -> (A D, A C), (C D, A C)
+                \end{itemize}
+                \item Сливаем результаты полученные на стадии map, получаем список пар:
+                \begin{itemize}
+                    \item (A B, [B C D, A C])
+                    \item (A C, [B C D, A B D])
+                    \item (A D, [B C D, A C])
+                    \item (B C, [A B D, A C])
+                    \item (C D, [A B D, A C])
+                \end{itemize}
+                \item На стадии reduce пересекаем с друг другом все элементы списка значений и получаем:
+                \begin{itemize}
+                    \item (A B, C)
+                    \item (A C, B D)
+                    \item (A D, C)
+                    \item (B C, A)
+                    \item (C D, A)
+                \end{itemize}
+            \end{itemize}
+    \clearpage
+
+    \subsection{Распределённая файловая система}
+        Что такое, зачем требуется для данного проекта
+        \subsubsection{Архитектура распределённой файловой системы}
+            картинка с описанием
+    \clearpage
+    \subsection{Распределённый map-reduce}
+        Что такое, зачем он нужен
+        map-reduce удобная концепция, но ...
+        
+        \subsubsection{Архитектура распределённого map-reduce}
+            картинка с подробным описанием
+    \clearpage
+
+    \subsection{Решаемый класс задач}
+        мат выкладки
+    \clearpage
+\clearpage
+
+\section{Объекты и методы}      
+        \noindent Характеристики программного обеспечения:
+        \begin{itemize}
+            \item Операционная система --- Ubuntu 14.04.1 LTS 64-bit.
+            \item IDE --- Syblime Text 2.
+            \item Язык программирования --- Python 2.7.3.
+        \end{itemize}
+        
+        \noindent Характеристики оборудования:
+        \begin{itemize}
+            \item Процессор --- Intel Core i7-3770k 3.5Ghz$\times$8.
+            \item Оперативная память --- 16Gb DDR3.
+            \item Видеокарта --- ATI Radeon 7860.
+        \end{itemize}
+\clearpage
+
+\section{Реализация}
+    \subsection{Используемые технологии}
+        внешние технологии используемые в проекте
+        сериализация, zmq и прочее
+        Парам пам пам
+    \clearpage
+
+    \subsection{Работа с большими данными}
+        какие есть проблемы
+        \subsubsection{python generator}
+            nee
+        \subsubsection{split}
+            бла
+
+        \subsubsection{dfs}
+            проблемы в dfs
+            как эти проблемы решаются в фс
+        \subsubsection{map-reduce}
+            проблемы в map-reduce
+            как эти проблемы решаются в map-reduce
+    \clearpage 
+
+    \subsection{Взаимодействие между узлами}
+        Описание реализации взаимодействия между различными узлами сети.
+        \subsubsection{класс nodesmanager}
+            описание класса
+    \clearpage
+
+    \subsection{Интерфейс}
+        есть dfs, есть mr
+        \subsubsection{dfs}
+
+
+            Distributed file system is required to map-reduce framework.
+
+            On each node, you should run *dfsnode.py* with two arguments - port and storagepath. Like this:
+
+
+                python dfsnode.py -p 5556 -s /home/username/storage
+
+
+            Then you should fill *config.json* with information about nodes. Now you can use *dfs.py*. Samples of use dfs.py:
+
+
+                python dfs.py -ls /user/
+                python dfs.py -mkdir /user/username/userdatafolder
+                python dfs.py -put ./test.in /user/username/userdatafolder/testfile
+                python dfs.py -get /user/username/userdatafolder/testfile
+                python dfs.py -rm /user/username
+        \subsubsection{mr}
+    \clearpage  
+
+
+\clearpage
+
+\section{Тестирование}
+    
+        
+\clearpage
+
+\section{Заключение}
+    
+\clearpage
+
+
+\begin{thebibliography}{0}
+\addcontentsline{toc}{section}{Список литературы}
+    \bibitem{SMILES}
+         SMILES~---~A Simplified Chemical Language~//~Daylight Chemical Information Systems, Inc: URL: http://www.daylight.com/dayhtml/doc/theory/theory.SMILES.html
+    \bibitem{PDBformat}
+        Atomic Coordinate Entry Format Description~//~Penn State University: URL: http://www.wwpdb.org/documentation/format33/v3.3.html
+        
+    \bibitem{PSU}
+        Periodic Table Datan Files~//~Protein Data Bank: URL: http://php.scripts.psu.edu/djh300/cmpsc221/p3s11-pt-data.htm
+    \bibitem{threejs}
+        Three.js~---~javascript 3D library~//~Three.js: URL: http://mrdoob.github.io/three.js/
+        
+    \bibitem{wikiribbon}
+       File: Tubby-1c8z-pymol.png~//~Wikipedia: URL: http://en.wikipedia.org/wiki/File:Tubby-1c8z-pymol.png
+             
+    \bibitem{GLMol}
+       GLmol - Molecular Viewer on WebGL/Javascript~//~GLmol: URL: http://webglmol.sourceforge.jp/index-en.html
+        
+\end{thebibliography}
+
+\end{document}
+
+
+
+
