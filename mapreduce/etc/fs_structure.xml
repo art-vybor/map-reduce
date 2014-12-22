@@ -1,8 +1,7 @@
 <root>
-  <in_100mb index_list="[14, 15]"/>
   <in_1gb index_list="[22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37]"/>
-  <in_1 index_list="[82]"/>
-  <in index_list="[99]"/>
-  <small_in index_list="[101]"/>
-  <out index_list="[158]"/>
+  <cf_100000 index_list="[166, 167]"/>
+  <in_groupby index_list="[186, 187, 188]"/>
+  <in_groupby_big index_list="[191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214]"/>
+  <out index_list="[216]"/>
 </root>

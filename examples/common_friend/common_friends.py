@@ -7,7 +7,6 @@ def map_func(input):
         yield ('%s %s:' % tuple(result), friends)
 
 def reduce_func(key, values):
-    print key, values
     result = ''
     if len(values) == 2:
         result = ' '.join(set(values[0]).intersection(set(values[1])))

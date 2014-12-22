@@ -2,7 +2,7 @@ from copy import deepcopy
 import random
 import string
 
-user_count = 400
+user_count = 100000
 max_friends = 300
 min_friends = 10
 
@@ -10,20 +10,21 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 #generate users
-users = []
+users = set()
 
-for i in range(0, user_count):
-    users.append(id_generator())
+while len(users) < user_count:
+    users.add(id_generator())
+
+users = list(users)
 
 #generate friends
 with open('in_common_friends_%s_%s' % (user_count, max_friends), 'w') as output:
     for user in users:
-        tmp_users = deepcopy(users)
 
-        friends = []
-        for i in range(0, random.randint(min_friends, max_friends)):
-            friend_index = random.randint(0, len(tmp_users)-1)
-            friends.append(tmp_users[friend_index])
-            tmp_users.pop(friend_index)
+        friends = set()
+        len_friends = random.randint(min_friends, max_friends)
+
+        while len(friends) < len_friends:
+            friends.add(users[random.randint(0, len(users)-1)])
 
         output.write('%s - %s\n' % (user, ' '.join(friends)))

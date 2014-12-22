@@ -39,13 +39,13 @@ class key_value_pool:
         self.flush()
 
     def flush(self, force=False, size_limit_mb=64):
-        size_limit = size_limit_mb * 1024 * 1024
+        #size_limit = size_limit_mb * 1024 * 1024
 
         for node in self.pool:
-            if force:
-                self.flush_node(node)
-            else: #TODO add size_limit
-                self.flush_node(node)
+            #if force:
+            self.flush_node(node)
+            #else: #TODO add size_limit
+            #    self.flush_node(node)
 
 
         self.nm.wait()

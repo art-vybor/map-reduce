@@ -13,6 +13,9 @@ import heapq
 import shelve
 import json
 
+
+kv_buffer = {}
+
 def parse_config(config_path):
      with open(config_path) as config_file:
          config_json = json.load(config_file)
@@ -56,21 +59,23 @@ def do_map_functions(indexes, mr_file, dfs_port):
         start = time()
 
         kv_dict = {}
+
         for row in block.split('\n'):
-            for key, value in mr.map_func(row):
-                if key in kv_dict:
-                    kv_dict[key].append(value)
-                else:
-                    kv_dict[key] = [value]
+            if len(row) > 0:
+                for key, value in mr.map_func(row):
                     
+                    if key in kv_dict:
+                        kv_dict[key].append(value)
+                    else:
+                        kv_dict[key] = [value]            
         kv_pool.add_dict(kv_dict)
 
         end = time()
         pool_time = end - start
 
-        print 'pool_time for block %i %fs' % (index, pool_time)
+        #print 'pool_time for block %i %fs' % (index, pool_time)
         
-    kv_pool.flush(force=True)
+    #kv_pool.flush(force=True)
 
 def do_reduce_functions(pairs, dfs_port):
     import mr_file as mr
@@ -127,15 +132,17 @@ def map_reduce_server(port):
                 socket.send(marshal.dumps('ok'))
 
             elif 'reduce' in message:
-                kv_store = shelve.open('kv_store')
-                print 'reduce: {NUM} pairs'.format(NUM=len(kv_store))
+                global kv_buffer
+                #kv_store = shelve.open('kv_store')
+                print 'reduce: {NUM} pairs'.format(NUM=len(kv_buffer))
 
                 start = time()
                 
-                indexes = do_reduce_functions(kv_store, dfs_port)
+                indexes = do_reduce_functions(kv_buffer, dfs_port)
 
-                kv_store.clear()
-                kv_store.close()
+                kv_buffer = {}
+                #kv_store.clear()
+                #kv_store.close()
 
                 print 'reduce finished: %ss' % (time() - start)
                 socket.send(marshal.dumps((indexes, message['node'])))
@@ -156,18 +163,20 @@ def add_pairs_server(port):
             dfs_port = message['dfs_port']                
 
             if 'add_pairs' in message:
+                global kv_buffer
+                
                 kv_dict = message['add_pairs']
                 print '\tadd_pairs: {NUM} pairs to add'.format(NUM=len(kv_dict))
 
-                start = time()
+                #start = time()
 
-                kv_store = shelve.open('kv_store', protocol=1, writeback=True) #TODO rename
+                #kv_store = shelve.open('kv_store', protocol=1, writeback=True) #TODO rename
 
-                mr_extend(kv_store, kv_dict)
+                mr_extend(kv_buffer, kv_dict)
 
-                kv_store.close()
+                #kv_store.close()
 
-                print '\tadd_pairs finished: %ss' % (time() - start)
+                #print '\tadd_pairs finished: %ss' % (time() - start)
                 socket.send(marshal.dumps('ok'))
             else:
                 print '\tincorrect request'
