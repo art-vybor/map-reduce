@@ -55,12 +55,12 @@ def main():
             if 'read' in message:
                 index = message['read']
                 print 'read {INDEX}'.format(INDEX=index)
-                data = zlib.compress(read_block(storage_path, index))
+                data = zlib.compress(read_block(storage_path, index), 1)
                 socket.send(data)
             elif 'write' in message:
                 index, data = message['write']
                 print 'write {INDEX}'.format(INDEX=index)
-                write_block(storage_path, index, zlib.decompress(data))
+                write_block(storage_path, index, zlib.decompress(data, 1))
                 socket.send('ok')
             elif 'remove' in message:
                 index = message['remove']

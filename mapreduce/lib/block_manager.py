@@ -48,7 +48,7 @@ class block_manager:
     def read_blocks(self, indexes):
         blocks = []
         for index in indexes:
-            yield zlib.decompress(read_block(self.get_socket(index), index))
+            yield zlib.decompress(read_block(self.get_socket(index), index), 1)
 
     def write_blocks(self, blocks):
         dfs_node_index = 0;
@@ -57,7 +57,7 @@ class block_manager:
         for block in blocks:
             index = self.get_index()
 
-            if write_block(self.dfs_nodes[dfs_node_index]['socket'], index, zlib.compress(block)):
+            if write_block(self.dfs_nodes[dfs_node_index]['socket'], index, zlib.compress(block, 1)):
                 self.index_map[index] = dfs_node_index            
                 indexes.append(index)
             else:
