@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import argparse
 import threading
 import zmq
@@ -12,6 +13,7 @@ import operator
 import heapq
 import shelve
 import json
+
 
 
 kv_buffer = {}
@@ -54,9 +56,9 @@ def do_map_functions(indexes, mr_file, dfs_port):
 
     for index in indexes:
         block = read(index, dfs_port) #TODO maybe make it inline (without connection to localhost).
-        pool_time = 0.0
+ #       pool_time = 0.0
 
-        start = time()
+  #      start = time()
 
         kv_dict = {}
 
@@ -70,8 +72,8 @@ def do_map_functions(indexes, mr_file, dfs_port):
                         kv_dict[key] = [value]            
         kv_pool.add_dict(kv_dict)
 
-        end = time()
-        pool_time = end - start
+   #     end = time()
+    #    pool_time = end - start
 
         #print 'pool_time for block %i %fs' % (index, pool_time)
         
@@ -151,8 +153,11 @@ def map_reduce_server(port):
 
         except Exception as inst:
             print 'ERROR (map_reduce): %s' % inst
-            
+
+lock = threading.Lock()
+
 def add_pairs_server(port):
+    global lock
     socket = zmq.Context().socket(zmq.REP)
     socket.bind("tcp://*:{PORT}".format(PORT=port))
 
@@ -171,8 +176,11 @@ def add_pairs_server(port):
                 #start = time()
 
                 #kv_store = shelve.open('kv_store', protocol=1, writeback=True) #TODO rename
+                
+                
 
-                mr_extend(kv_buffer, kv_dict)
+                with lock:
+                    mr_extend(kv_buffer, kv_dict)
 
                 #kv_store.close()
 

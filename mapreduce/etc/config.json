@@ -4,11 +4,6 @@
             "url":"tcp://localhost",
             "dfs_port":"5556",
             "mr_port":"5557",
-            "mr_slave_port":"5558"},
-        {
-            "url":"tcp://172.25.51.32",
-            "dfs_port":"5556",
-            "mr_port":"5557",
             "mr_slave_port":"5558"}
     ]
 }
