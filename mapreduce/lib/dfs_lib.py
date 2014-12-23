@@ -1,6 +1,7 @@
 import zmq
 import marshal
 
+
 def send(socket, func_word, data):
     request = {func_word: data}
     socket.send(marshal.dumps(request))

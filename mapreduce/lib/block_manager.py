@@ -1,6 +1,7 @@
 import zmq
 import pickle
 import os
+import zlib
 
 from copy import deepcopy
 from dfs_lib import send, read_block, write_block, remove_block
@@ -47,7 +48,7 @@ class block_manager:
     def read_blocks(self, indexes):
         blocks = []
         for index in indexes:
-            yield read_block(self.get_socket(index), index)
+            yield zlib.decompress(read_block(self.get_socket(index), index))
 
     def write_blocks(self, blocks):
         dfs_node_index = 0;
@@ -56,7 +57,7 @@ class block_manager:
         for block in blocks:
             index = self.get_index()
 
-            if write_block(self.dfs_nodes[dfs_node_index]['socket'], index, block):
+            if write_block(self.dfs_nodes[dfs_node_index]['socket'], index, zlib.compress(block)):
                 self.index_map[index] = dfs_node_index            
                 indexes.append(index)
             else:

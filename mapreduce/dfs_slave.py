@@ -2,6 +2,7 @@ import argparse
 import zmq
 import os
 import marshal
+import zlib
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Dfs node.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -54,12 +55,12 @@ def main():
             if 'read' in message:
                 index = message['read']
                 print 'read {INDEX}'.format(INDEX=index)
-                data = read_block(storage_path, index)
+                data = zlib.compress(read_block(storage_path, index))
                 socket.send(data)
             elif 'write' in message:
                 index, data = message['write']
                 print 'write {INDEX}'.format(INDEX=index)
-                write_block(storage_path, index, data)
+                write_block(storage_path, index, zlib.decompress(data))
                 socket.send('ok')
             elif 'remove' in message:
                 index = message['remove']
