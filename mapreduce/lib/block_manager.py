@@ -1,5 +1,5 @@
 import zmq
-import pickle
+import marshal
 import os
 
 from copy import deepcopy
@@ -13,14 +13,14 @@ class block_manager:
             dfs_node['socket'] = zmq.Context().socket(zmq.REQ)
             dfs_node['socket'].connect('{URL}:{PORT}'.format(URL=dfs_node['url'], PORT=dfs_node['dfs_port']))
 
-        self.bm_file = os.path.join(os.path.dirname(__file__), '../etc/bm.pickle')
-        self.index_map = pickle.load(open(self.bm_file, 'rb')) if os.path.exists(self.bm_file) else {}
+        self.bm_file = os.path.join(os.path.dirname(__file__), '../etc/bm.data')
+        self.index_map = marshal.load(open(self.bm_file, 'rb')) if os.path.exists(self.bm_file) else {}
 
         if 0 not in self.index_map:
             self.index_map[0] = 1
 
     def save(self):
-        pickle.dump(self.index_map, open(self.bm_file, 'wb'))
+        marshal.dump(self.index_map, open(self.bm_file, 'wb'))
 
     def get_index(self):
         index = self.index_map[0]

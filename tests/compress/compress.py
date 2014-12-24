@@ -2,7 +2,7 @@ import zlib
 import bz2
 from time import time
 
-string = open('../../mapreduce/groupby_1000000_400', 'r').read()[0:100*1000*1000]
+string = open('../../mapreduce/groupby_1000000_400', 'r').read()[0:10*1000*1000]
 
 source_size = len(string)*1.0/1024/1024
 print 'source: %.2fkk' % (source_size)
