@@ -15,7 +15,7 @@ def read_block(socket, index, compress=False):
 
     return response
 
-def write_block(socket, index, block, compress):
+def write_block(socket, index, block, compress=False):
     if compress:
         block = zlib.compress(block, 1)
     return send(socket, 'write', (index, block), compress) == 'ok'
