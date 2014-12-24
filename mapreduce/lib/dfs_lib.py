@@ -2,16 +2,24 @@ import zmq
 import marshal
 
 
-def send(socket, func_word, data):
-    request = {func_word: data}
+def send(socket, func_word, data, compress=False):
+    request = {func_word: data, 'compress': compress}
     socket.send(marshal.dumps(request))
     return socket.recv()
 
-def read_block(socket, index):
-    return send(socket, 'read', index)
+def read_block(socket, index, compress=False):
+    response = send(socket, 'read', index, compress)
+    if compress:
+        print 'decompress %d' % index
+        response = zlib.decompress(response)
 
-def write_block(socket, index, block):
-    return send(socket, 'write', (index, block)) == 'ok'
+    return response
+
+def write_block(socket, index, block, compress):
+    if compress:
+        print 'compress %d' % index
+        block = zlib.compress(block, 1)
+    return send(socket, 'write', (index, block), compress) == 'ok'
 
 def remove_block(socket, index):
     return send(socket, 'remove', index) == 'ok' 

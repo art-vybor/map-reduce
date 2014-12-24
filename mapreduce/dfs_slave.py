@@ -54,13 +54,22 @@ def main():
             message = marshal.loads(message)
             if 'read' in message:
                 index = message['read']
+                compress = message['compress']
+
                 print 'read {INDEX}'.format(INDEX=index)
-                data = zlib.compress(read_block(storage_path, index), 1)
-                socket.send(data)
+                block = read_block(storage_path, index)
+                if compress:
+                    block = zlib.compress(block, 1)
+                socket.send(block)
             elif 'write' in message:
-                index, data = message['write']
+                index, block = message['write']
+                compress = message['compress']
+
                 print 'write {INDEX}'.format(INDEX=index)
-                write_block(storage_path, index, zlib.decompress(data, 1))
+
+                if compress:
+                    block = zlib.decompress(block)
+                write_block(storage_path, index, block)
                 socket.send('ok')
             elif 'remove' in message:
                 index = message['remove']
@@ -72,8 +81,9 @@ def main():
                 print 'change_index {OLD} to {NEW}'.format(OLD=old_index, NEW=new_index)
                 change_block_index(storage_path, old_index, new_index)
                 socket.send('ok')
-        except:
-            pass
+        except Exception as inst:
+            print 'ERROR: %s' % inst
+
 
 if __name__ == "__main__":
     main()
