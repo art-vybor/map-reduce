@@ -30,8 +30,8 @@ class block_manager:
     def get_socket(self, index):
         return self.dfs_nodes[self.index_map[index]]['socket']
 
-    def is_compress(self, index):
-        return not self.dfs_nodes[self.index_map[index]]['url'].endswith('localhost')
+    def is_compress(self, dfs_node_index):
+        return not (self.dfs_nodes[dfs_node_index]['url']).endswith('localhost')
 
     def split_indexes_by_node(self, indexes):
         result = {}
@@ -50,7 +50,7 @@ class block_manager:
     def read_blocks(self, indexes):
         blocks = []
         for index in indexes:
-            yield read_block(self.get_socket(index), index, self.is_compress(index))
+            yield read_block(self.get_socket(index), index, self.is_compress(self.index_map[index]))
 
     def write_blocks(self, blocks):
         dfs_node_index = 0;
@@ -59,7 +59,7 @@ class block_manager:
         for block in blocks:
             index = self.get_index()
 
-            if write_block(self.dfs_nodes[dfs_node_index]['socket'], index, block, self.is_compress(index)):
+            if write_block(self.dfs_nodes[dfs_node_index]['socket'], index, block, self.is_compress(dfs_node_index)):
                 self.index_map[index] = dfs_node_index            
                 indexes.append(index)
             else:

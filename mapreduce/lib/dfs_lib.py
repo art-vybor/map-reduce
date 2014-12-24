@@ -1,5 +1,6 @@
 import zmq
 import marshal
+import zlib
 
 
 def send(socket, func_word, data, compress=False):
@@ -10,14 +11,12 @@ def send(socket, func_word, data, compress=False):
 def read_block(socket, index, compress=False):
     response = send(socket, 'read', index, compress)
     if compress:
-        print 'decompress %d' % index
         response = zlib.decompress(response)
 
     return response
 
 def write_block(socket, index, block, compress):
     if compress:
-        print 'compress %d' % index
         block = zlib.compress(block, 1)
     return send(socket, 'write', (index, block), compress) == 'ok'
 
