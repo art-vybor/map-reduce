@@ -66,23 +66,18 @@ def do_map_functions(indexes, mr_file, dfs_port):
 
 def do_reduce_functions(pairs, dfs_port):
     import mr_file as mr
-    print 1
     res_pairs = []
 
     for pair in pairs.iteritems():
         res_pairs.append(mr.reduce_func(*pair))
-    print 2
-    blocks = split(res_pairs, lambda x: '%s %s\n' % (x))
-    print 3
+    blocks = split(res_pairs, lambda x: '%s\n' % (x))
     indexes = []
 
     index = -1
-    print 4
     for block in blocks:
         if write(index, block, dfs_port):                           
             indexes.append(index)
             index -= 1
-        else:
             raise Exception("Can't write block with index {INDEX}".
                     format(INDEX=index))
     print 5
