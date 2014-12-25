@@ -1,0 +1,12 @@
+for i in 06 07 12 17 18
+do
+	
+	ssh U330-$i '
+		echo ---------------
+		echo     'node $i'
+		echo ---------------
+		
+		
+		rm -rf /root/git		
+	exit'
+done
