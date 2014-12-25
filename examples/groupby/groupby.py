@@ -4,5 +4,4 @@ def map_func(input):
         yield (domen[1], input)
 
 def reduce_func(key, values):
-    for value in values:
-        yield (key, value)
+    return (key, values)
