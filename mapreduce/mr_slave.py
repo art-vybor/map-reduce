@@ -78,6 +78,7 @@ def do_reduce_functions(pairs, dfs_port):
         if write(index, block, dfs_port):                           
             indexes.append(index)
             index -= 1
+        else:
             raise Exception("Can't write block with index {INDEX}".
                     format(INDEX=index))
     print 5
