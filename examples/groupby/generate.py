@@ -1,7 +1,7 @@
 import random
 
-n = 10 #num rows
-m = 4 #num ceils
+n = 100 #num rows
+m = 40 #num ceils
 
 k = 1000 #field range
 

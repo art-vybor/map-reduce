@@ -1,6 +1,8 @@
 def map_func(input):
-    for word in input.split():
-        yield (word, 1)
+    domen = input.split()
+    if int(domen[1]) > 850:
+        yield (domen[1], input)
 
 def reduce_func(key, values):
-    return (key, sum(values))
+    for value in values:
+        yield (key, value)

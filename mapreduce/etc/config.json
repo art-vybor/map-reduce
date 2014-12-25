@@ -2,12 +2,32 @@
     "nodes": [
         {
             "url":"tcp://localhost",
-            "dfs_port":"5556",
+            "dfs_port":"5559",
             "mr_port":"5557",
             "mr_slave_port":"5558"},
         {
-            "url":"tcp://172.25.51.32",
-            "dfs_port":"5556",
+            "url":"tcp://192.168.30.6",
+            "dfs_port":"5559",
+            "mr_port":"5557",
+            "mr_slave_port":"5558"},
+         {
+            "url":"tcp://192.168.30.7",
+            "dfs_port":"5559",
+            "mr_port":"5557",
+            "mr_slave_port":"5558"},
+          {
+            "url":"tcp://192.168.30.12",
+            "dfs_port":"5559",
+            "mr_port":"5557",
+            "mr_slave_port":"5558"},
+          {
+            "url":"tcp://192.168.30.17",
+            "dfs_port":"5559",
+            "mr_port":"5557",
+            "mr_slave_port":"5558"},            
+          {
+            "url":"tcp://192.168.30.18",
+            "dfs_port":"5559",
             "mr_port":"5557",
             "mr_slave_port":"5558"}
     ]
