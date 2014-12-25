@@ -1,7 +1,8 @@
-#python dfs.py -rm /in
-#python dfs.py -put ../examples/common_friend_1000_300.in /in
-python dfs.py -rm /out
-python mr.py -i /in_groupby_small -o /out -mr ../examples/groupby/groupby.py
+
+#python dfs.py -rm /in_wc
+
+time python dfs.py -put ../examples/wordcount/out /in
+time python mr.py -i /in -o /out -mr ../examples/wordcount/wordcount.py
 #python mr.py -i /in_1gb -o /out -mr ../wordcount.py
 #python dfs.py -get /out
 

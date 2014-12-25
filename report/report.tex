@@ -375,16 +375,14 @@
         переписать под компы в 330   
         \noindent Характеристики программного обеспечения:
         \begin{itemize}
-            \item Операционная система --- Ubuntu 14.04.1 LTS 64-bit.
-            \item IDE --- Syblime Text 2.
+            \item Операционная система --- openSUSE 12.2 (x86_64.
             \item Язык программирования --- Python 2.7.3.
         \end{itemize}
         
         \noindent Характеристики оборудования:
         \begin{itemize}
-            \item Процессор --- Intel Core i7-3770k 3.5Ghz$\times$8.
-            \item Оперативная память --- 16Gb DDR3.
-            \item Накопитель --- ....
+            \item Процессор --- Intel(R) Core(TM)2 Duo CPU E6550 @ 2.33GHz. 2 ядра
+            \item Оперативная память --- 2Gb DDR2.
         \end{itemize}
 \clearpage
 
@@ -576,14 +574,33 @@
 \section{Тестирование}
 \label{sec:tests}
     wordcount
+	1gb 6нод
         local:1m20s
         dfsput:0m44s
-        mr:0m35s
-        sum:1m19s
+        ноды:
+        6
+		dfsput:0m38s
+		mr:0m35s
+	5
+		dfsput:0m35s
+		mr:0m38s
+	4
+		dfsput:0m37s
+		mr:0m43s
+	3
+		dfsput:0m37s
+		mr:0m58s
+	2
+		dfsput:0m40s
+		mr:1m24s
+	1
     groupby:
-        local:
-        dfsput:
-        mr:
+	6gb
+	на ноду по 1gb
+	0.5 остаётся после where
+        local:6m39s
+        dfsput: 4m30s
+        mr: 1m54.441s
     бла бла
         
 \clearpage

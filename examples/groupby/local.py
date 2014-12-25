@@ -1,5 +1,5 @@
 block_index = 0
-block_len_limit = 64*1024*1024
+block_len_limit = 500*1024*1024
 block_len = 0
 block = []
 
@@ -18,7 +18,7 @@ def dump():
         block_len = 0
         block = []
 
-with open('../../mapreduce/groupby_1000000_400', 'r') as i:
+with open('./in', 'r') as i:
     for line in i:        
         domen = line.split()
 
