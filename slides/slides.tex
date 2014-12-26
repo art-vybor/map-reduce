@@ -1,11 +1,12 @@
-\documentclass{beamer}
+\documentclass[utf8]{beamer}
+
  
 \usepackage[utf8]{inputenc}
 \usepackage[english,russian]{babel}
 \usepackage{graphicx}
-\graphicspath{ {./pictures/} }
+\graphicspath{ {../report/pictures/} }
 \usepackage{color}
-
+\usepackage{listings} 
 
 \mode<presentation> {\usetheme{default}}
 \setbeamertemplate{itemize items}[triangle]
@@ -55,15 +56,12 @@
     \begin{frame}
     \frametitle{Зачем нужен map-reduce?}
         \begin{itemize}
-            \item Обработка больших данных (Big Data).
-            \begin{itemize}
-                \item Вычисления превосходят возможности одной машины.  
-                \item Данные не помещаются в памяти, необходимо обращаться к диску.
-                \item Можно хранить много данных, но задержки и пропускная способность оборудования растут пропорционально данным.
-            \end{itemize}
-            \item Удобная абстракция для построения алгоритмов обработки больших данных.
-            \item Устойчивость к отказам.            
-        \end{itemize} 
+            \item Вычисления превосходят возможности одной машины.  
+            \item Данные не помещаются в памяти, необходимо обращаться к диску.
+            \item Большое количество узлов в кластере вызывает множество отказов.
+            \item Данные хранятся на множестве машин.
+            \item Достаточно дорогая и сложная разработка низкоуровневных приложений для подобных систем.
+        \end{itemize}
     \end{frame}
 
     \begin{frame}
@@ -81,10 +79,18 @@
     \end{frame}
 
     \begin{frame}
+    \frametitle{Что такое map-reduce?}
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[scale=0.4]{mapreduce.png}
+        \end{figure}        
+    \end{frame}
+
+    \begin{frame}
     \frametitle{Map-reduce на примере - Поиск общих друзей}
         \begin{itemize}
             \item {\bfЗадача:} Есть граф пользователей некоторого ресурса, заданный в виде строчек: <<пользователь - друг1 друг2 ...>>. Для каждой пары пользователей найти общих друзей.
-            \item Разберём задачу на следующих входных данных: \\
+            \item Разберём задачу на следующих входных данных:
                 \begin{itemize}
                     \item A - B C D
                     \item B - A C
@@ -92,8 +98,7 @@
                     \item D - A C
                 \end{itemize}          
         \end{itemize} 
-    \end{frame}  
-
+    \end{frame}
 
     \begin{frame}
     \frametitle{Map-reduce на примере - Поиск общих друзей}
@@ -125,7 +130,7 @@
     \begin{frame}
     \frametitle{Map-reduce на примере - Поиск общих друзей}
         \begin{itemize}
-            \item На стадии reduce пересекаем с друг другом все элементы списка значений и получаем:
+            \item На стадии reduce пересекаем друг c другом все элементы списка значений и получаем:
             \begin{itemize}
                 \item (A B, C)
                 \item (A C, B D)
@@ -134,127 +139,72 @@
                 \item (C D, A)
             \end{itemize}
         \end{itemize}
-    \end{frame} 
+    \end{frame}
 
+    \begin{frame}
+    \frametitle{Map-reduce на примере - Поиск общих друзей}
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[scale=0.28]{code_sample.png}
+        \end{figure}        
+    \end{frame}
+    
 \section{Архитектура}
 
     \begin{frame}
     \frametitle{Архитектура распределённого map-reduce}
         \begin{figure}[h!]
-            \begin{center}
-                \includegraphics[scale=0.5]{map-reduce.png}
-            \end{center}
+            \centering
+            \includegraphics[scale=0.45]{framework_total.png}
         \end{figure}        
-    \end{frame}
-
-
-    \begin{frame}
-    \frametitle{Как работает распределённая файловая система}
-        \begin{itemize}
-            \item Файл разбивается на блоки фиксированного размера (64мб).
-            \item Получившиеся блоки распределяются по машинам.
-            \item Cтруктура фс - дерево, в котором узлы соответствуют папкам, а листья - файлам.
-            \item Файл представляет собой список индексов.
-            \item BlockManager - класс, раздающий новых индексы и содержащий таблицу отображения блоков в конкретную ноду.
-        \end{itemize}
-    \end{frame}
-
-
-
-    \begin{frame}
-    \frametitle{Как работает распределённый map-reduce}
-        \begin{itemize}
-            \item На вход подаются адреса файлов в DFS для ввода и вывода, а также файл с функциями map и reduce.
-            \item Стадии выполнения:
-            \begin{itemize}
-                \item Получение по входному файлу списка индексов в DFS.
-                \item Разбиение списка индексов по узлам.
-                \item Выполнение стадии map на узлах.
-                \item Распределение данных между узлами.
-                \item Выполнение стадии reduce на узлах.
-                \item Добавление результатов функций reduce в виде файла в DFS.
-                \begin{itemize}
-                    \item Переименование результатов.
-                    \item Запись информации о новом файле в DFS.
-                \end{itemize} 
-            \end{itemize} 
-        \end{itemize}        
     \end{frame}
 
     \begin{frame}
     \frametitle{Архитектура распределённого map-reduce}
         \begin{figure}[h!]
-            \begin{center}
-                \includegraphics[scale=1]{total_data.png}
-            \end{center}
+            \centering
+            \includegraphics[scale=0.25]{map_reduce_framework.png}
         \end{figure}        
     \end{frame}
 
-
+\section{Тестирование}
     \begin{frame}
-    \frametitle{Как работает map на узлах}
-        \begin{itemize}
-            \item По списку индексов получаются данные путём обращения к узлу dfs, находящемуся на этой машине.
-            \item Для каждого индекса выполняется переданная функция map.
-            \item Результаты каждого map в виде ассоциативного массива передаются структуре reduce pool.
-            \item По окончании оставшиеся в reduce pool данные отправляются по узлам.
-        \end{itemize}        
+    \frametitle{Результаты тестирования}
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[scale=0.23]{test1.png}
+        \end{figure}        
     \end{frame}
 
     \begin{frame}
-    \frametitle{Как работает reduce на узлах}
-
-        \begin{itemize}
-            \item Cливает результаты стадий map и распределяет их по узлам.
-            \item Cтруктура reduce pool состоит из набора ассоциативных массивов, каждый из которых соответствует одному slave узлу.
-            \item Данные переданные в структуру reduce pool равномерно распределяются среди набора массивов.
-            \item После добавления новых данных структура проверяет, не превышает ли один элементов набора установленного размера. При превышении установленного размера элемент отправляется на соответсвующий узел. 
-            \item На узлах, все полученные от reduce pool данные аккумулируются.
-        \end{itemize}        
-    \end{frame}
-
-
-    \begin{frame}
-    \frametitle{Как работает reduce на узлах}
-        \begin{itemize}
-            \item Разбивает все данные на блоки пар, по возможности, не превышающие фиксированного размера с точность до одной пары.
-            \item Для каждой полученный пары выполняется переданная функция reduce.
-            \item Полученный результат разбивается на блоки равного размера (64мб).
-            \item Блоки записываются в dfs на узел, где выполнялся reduce под псевдоименами.
-        \end{itemize}        
-    \end{frame}
-
-
-\section{Отчёт}
-    \begin{frame}
-    \frametitle{Что сделано}
-        \begin{itemize}
-            \item Разработаны архитектуры распределённых map-reduce и файловой системы.
-            \item Реализован распределённый map-reduce.
-            \item Для реализации RPC была выбрана связка: ZeroMQ + Marshal.
-            \item Реализована распределённая файловая система для хранения больших данных.
-        \end{itemize} 
+    \frametitle{Результаты тестирования}
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[scale=0.23]{test2.png}
+        \end{figure}        
     \end{frame}
 
     \begin{frame}
-    \frametitle{Что не реализовано}
-        \begin{itemize}            
-            \item Существует узкое место при аггрегации данных перед стадией reduce (reduce pool) - возможно переполнение оперативной памяти. Исправить можно следующим образом:
+    \frametitle{Результаты тестирования}
+        \begin{itemize}
+            \item Выполнение задачи класса информационный поиск:
             \begin{itemize}
-                \item При получении данных, они добавляются в ассоциативный массив.
-                \item При превышении массивом установленного размера он сортируется и выгружается на диск.
-                \item Перед выполнением стадии reduce необходимо отсортировать и выгрузить на диск оставшиеся в массиве данные.
-                \item Во время выполнения стадии reduce полученные файлы на лету сливаются и обрабатываются функцией reduce.
-            \end{itemize} 
-        \end{itemize} 
+                \item время загрузки данных в РФС~---~4мин.~30с.
+                \item время выполнения задачи с помощью фреймворка map-reduce~---~1мин.~54с.
+                \item время выполнения задачи на одной машине без использования фреймворка~---~6мин.~39с.
+            \end{itemize}
+        \end{itemize}
     \end{frame}
 
     \begin{frame}
-    \frametitle{Что предстоит сделать}
+    \frametitle{Выводы}
         \begin{itemize}
-            \item Подготовить код распределённого map-reduce для тестов.
-            \item Протестировать полученную систему на больших данных и проанализировать результаты.
-        \end{itemize} 
+            \item С увеличением количества узлов производительность выполнения задач с помощью фреймворка растёт и превосходит производительность выполнения на одной машине.
+            \item Время загрузки данных в РФС не зависит от количества узлов.
+            \item Наиболее подходящей стратегий использования фреймворка является загрузка данных в РФС и их последующее использование в качестве входных данных для нескольких задач.
+            \item Map-reduce удобная абстракция для построения решения части задач класса информационный поиск.
+            \item Использование фреймфорка map-reduce для решения задач класса информационный поиск целесообразно.
+        \end{itemize}
     \end{frame}
 
 \begin{frame}
