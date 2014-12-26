@@ -69,7 +69,7 @@ def do_reduce_functions(pairs, dfs_port):
     res_pairs = []
 
     for pair in pairs.iteritems():
-        res_pairs.append(mr.reduce_func(*pair))
+        res_pairs.extend(mr.reduce_func(*pair))
     blocks = split(res_pairs, lambda x: '%s %s\n' % (x[0], x[1]))
     indexes = []
 
